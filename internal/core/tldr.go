@@ -28,7 +28,7 @@ func New() (*TLDR, error) {
 	}
 
 	model := &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
+		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
 	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{})
