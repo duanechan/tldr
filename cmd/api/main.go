@@ -16,6 +16,7 @@ func main() {
 	mux.Handle("GET /", http.FileServer(http.Dir("web/dist")))
 	mux.HandleFunc("GET /health", app.Health)
 	mux.HandleFunc("POST /api/v1/summarize/document", app.SummarizeDocument)
+	mux.HandleFunc("POST /api/v1/summarize/text", app.SummarizeText)
 
 	app.Logger.Info("Server started:", "port", app.Config.Port, "environment", app.Config.Environment)
 	if err := http.ListenAndServe(":"+app.Config.Port, app.LogMiddleware(mux)); err != nil {
