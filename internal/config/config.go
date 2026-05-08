@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Port        string
 	Environment string
+	APIModel    string
 	APIKey      string
 	LogLevel    string
 }
@@ -19,6 +20,7 @@ func New() (*Config, error) {
 
 	port := os.Getenv("PORT")
 	environment := os.Getenv("APP_ENV")
+	apiModel := os.Getenv("GEMINI_MODEL")
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	logLevel := os.Getenv("LOG_LEVEL")
 
@@ -26,13 +28,18 @@ func New() (*Config, error) {
 		port = "8080"
 	}
 
+	if apiModel == "" {
+		return nil, errors.New("Missing Gemini Model (GEMINI_MODEL) environment variable")
+	}
+
 	if apiKey == "" {
-		return nil, errors.New("Missing Gemini API Key environment variable")
+		return nil, errors.New("Missing Gemini API Key (GEMINI_API_KEY) environment variable")
 	}
 
 	return &Config{
 		Port:        port,
 		Environment: environment,
+		APIModel:    apiModel,
 		APIKey:      apiKey,
 		LogLevel:    logLevel,
 	}, nil

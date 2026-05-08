@@ -15,6 +15,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", app.Health)
+	mux.HandleFunc("POST /api/v1/summarize/document", app.SummarizeDocument)
 
 	log.Printf("Server listening on port :%s\n", app.Config.Port)
 	log.Printf("Server environment: %s\n", app.Config.Environment)
