@@ -5,3 +5,5 @@
 # Requests
 *.http
 *.rest
+
+node_modules/

@@ -13,6 +13,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.Handle("GET /", http.FileServer(http.Dir("web/dist")))
 	mux.HandleFunc("GET /health", app.Health)
 	mux.HandleFunc("POST /api/v1/summarize/document", app.SummarizeDocument)
 
