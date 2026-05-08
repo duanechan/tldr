@@ -14,10 +14,10 @@ func (t *TLDR) Health(w http.ResponseWriter, r *http.Request) {
 }
 
 type SummarizeResponse struct {
-	Response string        `json:"response"`
-	Filename string        `json:"filename"`
-	FileType string        `json:"file_type"`
-	Duration time.Duration `json:"duration"`
+	Response string `json:"response"`
+	Filename string `json:"filename"`
+	FileType string `json:"file_type"`
+	Duration int64  `json:"duration"`
 }
 
 func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,6 @@ func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
 
 	parts := []*genai.Part{
 		{InlineData: &genai.Blob{MIMEType: data.MIMEType, Data: data.FileBytes}},
-		genai.NewPartFromText("Summarize this document and extract key parts listed in bullet form."),
 	}
 
 	contents := []*genai.Content{
@@ -41,7 +40,7 @@ func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		t.Config.APIModel,
 		contents,
-		nil,
+		t.Model,
 	)
 	if err != nil {
 		errorResponse(w, http.StatusInternalServerError, err.Error())
@@ -54,6 +53,6 @@ func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
 		Response: result.Text(),
 		Filename: data.Filename,
 		FileType: data.MIMEType,
-		Duration: duration,
+		Duration: duration.Milliseconds(),
 	})
 }

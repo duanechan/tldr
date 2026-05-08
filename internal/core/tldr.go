@@ -10,7 +10,12 @@ import (
 type TLDR struct {
 	Config *config.Config
 	Client *genai.Client
+	Model  *genai.GenerateContentConfig
 }
+
+const prompt = `
+You are a document summarizer.
+Summarize the documents that are provided to you and extract its key points.`
 
 func New() (*TLDR, error) {
 	cfg, err := config.New()
@@ -18,7 +23,11 @@ func New() (*TLDR, error) {
 		return nil, err
 	}
 
-	client, err := genai.NewClient(context.Background(), nil)
+	model := &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
+	}
+
+	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -26,5 +35,6 @@ func New() (*TLDR, error) {
 	return &TLDR{
 		Config: cfg,
 		Client: client,
+		Model:  model,
 	}, nil
 }
