@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -23,14 +24,29 @@ type SummarizeResponse struct {
 
 func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	data, err := GetDocumentData(w, r)
+	if err := r.ParseMultipartForm(10 << 2); err != nil {
+		errorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	file, header, err := r.FormFile("document")
+	if err != nil {
+		errorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	defer file.Close()
+
+	filename := header.Filename
+	mimeType := header.Header.Get("Content-Type")
+
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		errorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	parts := []*genai.Part{
-		{InlineData: &genai.Blob{MIMEType: data.MIMEType, Data: data.FileBytes}},
+		{InlineData: &genai.Blob{MIMEType: mimeType, Data: fileBytes}},
 	}
 
 	contents := []*genai.Content{
@@ -52,8 +68,8 @@ func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusOK, SummarizeResponse{
 		Response: result.Text(),
-		Filename: data.Filename,
-		FileType: data.MIMEType,
+		Filename: filename,
+		FileType: mimeType,
 		Duration: duration.Milliseconds(),
 	})
 }
