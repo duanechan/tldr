@@ -6,5 +6,8 @@
 *.http
 *.rest
 
+# SQLite
+*.db
+
 node_modules/
 tmp/
