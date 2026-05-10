@@ -9,6 +9,6 @@ FROM users
 WHERE id = ?;
 
 -- name: GetUserByName :one
-SELECT id, username, created_at, updated_at
+SELECT *
 FROM users
 WHERE username = ?;

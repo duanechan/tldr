@@ -66,26 +66,20 @@ func (q *Queries) GetUserById(ctx context.Context, id interface{}) (GetUserByIdR
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, username, created_at, updated_at
+SELECT id, created_at, updated_at, username, password
 FROM users
 WHERE username = ?
 `
 
-type GetUserByNameRow struct {
-	ID        interface{}
-	Username  string
-	CreatedAt string
-	UpdatedAt string
-}
-
-func (q *Queries) GetUserByName(ctx context.Context, username string) (GetUserByNameRow, error) {
+func (q *Queries) GetUserByName(ctx context.Context, username string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByName, username)
-	var i GetUserByNameRow
+	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Username,
+		&i.Password,
 	)
 	return i, err
 }

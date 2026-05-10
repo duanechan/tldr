@@ -18,6 +18,7 @@ func main() {
 
 	api := http.NewServeMux()
 	api.HandleFunc("POST /v1/auth/register", app.Register)
+	api.HandleFunc("POST /v1/auth/login", app.Login)
 	api.HandleFunc("POST /v1/summarize/document", app.SummarizeDocument)
 	api.HandleFunc("POST /v1/summarize/text", app.SummarizeText)
 
