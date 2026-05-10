@@ -17,6 +17,7 @@ func main() {
 	app.Use(app.LogMiddleware, core.CorsMiddleware)
 
 	api := http.NewServeMux()
+	api.HandleFunc("POST /v1/auth/register", app.Register)
 	api.HandleFunc("POST /v1/summarize/document", app.SummarizeDocument)
 	api.HandleFunc("POST /v1/summarize/text", app.SummarizeText)
 
