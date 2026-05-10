@@ -9,10 +9,16 @@ import (
 	"google.golang.org/genai"
 )
 
+type HealthResponse struct {
+	Status string `json:"status"`
+	Uptime string `json:"uptime"`
+}
+
 func (t *TLDR) Health(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, 200, struct {
-		Status string
-	}{Status: "OK"})
+	jsonResponse(w, http.StatusOK, HealthResponse{
+		Status: "OK",
+		Uptime: time.Since(t.startedAt).Round(time.Second).String(),
+	})
 }
 
 type SummarizeResponse struct {

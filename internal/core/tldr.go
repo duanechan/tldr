@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/duanechan/tldr/internal/config"
 	"github.com/lmittmann/tint"
@@ -11,10 +12,11 @@ import (
 )
 
 type TLDR struct {
-	Config *config.Config
-	Client *genai.Client
-	Model  *genai.GenerateContentConfig
-	Logger *slog.Logger
+	Config    *config.Config
+	Client    *genai.Client
+	Model     *genai.GenerateContentConfig
+	Logger    *slog.Logger
+	startedAt time.Time
 }
 
 const prompt = `
@@ -55,9 +57,10 @@ func New() (*TLDR, error) {
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}))
 
 	return &TLDR{
-		Config: cfg,
-		Client: client,
-		Model:  model,
-		Logger: logger,
+		Config:    cfg,
+		Client:    client,
+		Model:     model,
+		Logger:    logger,
+		startedAt: time.Now(),
 	}, nil
 }
