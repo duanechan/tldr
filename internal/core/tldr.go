@@ -2,12 +2,14 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/duanechan/tldr/internal/config"
+	"github.com/duanechan/tldr/internal/database"
 	"github.com/lmittmann/tint"
 	"google.golang.org/genai"
 )
@@ -15,6 +17,7 @@ import (
 type TLDR struct {
 	mux       *http.ServeMux
 	Handler   http.Handler
+	DB        *database.Queries
 	Config    *config.Config
 	Client    *genai.Client
 	Model     *genai.GenerateContentConfig
@@ -34,6 +37,11 @@ func New() (*TLDR, error) {
 		return nil, err
 	}
 
+	db, err := sql.Open("sqlite", "./tldr.db")
+	if err != nil {
+		return nil, err
+	}
+
 	model := &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
 	}
@@ -43,18 +51,9 @@ func New() (*TLDR, error) {
 		return nil, err
 	}
 
-	var logLevel slog.Leveler
-	switch cfg.LogLevel {
-	case "debug":
-		logLevel = slog.LevelDebug
-	case "info":
-		logLevel = slog.LevelInfo
-	case "warn":
-		logLevel = slog.LevelWarn
-	case "error":
-		logLevel = slog.LevelError
-	default:
-		logLevel = slog.LevelInfo
+	var logLevel slog.Level
+	if err := logLevel.UnmarshalText([]byte(cfg.LogLevel)); err != nil {
+		return nil, err
 	}
 
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}))
@@ -63,6 +62,7 @@ func New() (*TLDR, error) {
 	return &TLDR{
 		mux:       mux,
 		Handler:   mux,
+		DB:        database.New(db),
 		Config:    cfg,
 		Client:    client,
 		Model:     model,

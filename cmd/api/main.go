@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/duanechan/tldr/internal/core"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
