@@ -1,1 +1,8 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+body {
+  background-color: var(--color-gray-800);
+  color: white;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+}
