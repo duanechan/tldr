@@ -5,6 +5,7 @@ import {
   UserPlusIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -19,8 +20,8 @@ import { Input } from "./ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import { Label } from "./ui/label";
 
-export default function LoginForm() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+export default function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const navigate = useNavigate();
   const [isPasswordShown, setPasswordShown] = useState(false);
   const [isConfirmPasswordShown, setConfirmPasswordShown] = useState(false);
 
@@ -34,7 +35,9 @@ export default function LoginForm() {
           {mode === "login" ? "Sign in to your account." : "Create an account."}
         </CardDescription>
         <CardAction
-          onClick={() => setMode(mode === "login" ? "register" : "login")}
+          onClick={() => {
+            navigate(mode === "login" ? "/register" : "/login");
+          }}
         >
           <Button type="button" variant="link" aria-label="Sign Up">
             {mode === "login" ? (
