@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/google/uuid"
 )
@@ -61,7 +62,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.DB.CreateUser(r.Context(), database.CreateUserParams{
+	_, err = t.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:       id,
 		Username: req.Username,
 		Password: hashedPassword,
@@ -71,5 +72,11 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse(w, http.StatusCreated, user)
+	token, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusCreated, authResponse{Token: token})
 }
