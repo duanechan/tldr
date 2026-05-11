@@ -19,8 +19,8 @@ func main() {
 	api := http.NewServeMux()
 	api.HandleFunc("POST /v1/auth/register", app.Register)
 	api.HandleFunc("POST /v1/auth/login", app.Login)
-	api.HandleFunc("POST /v1/summarize/document", app.SummarizeDocument)
-	api.HandleFunc("POST /v1/summarize/text", app.SummarizeText)
+	api.Handle("POST /v1/summarize/document", app.AuthMiddleware(http.HandlerFunc(app.SummarizeDocument)))
+	api.Handle("POST /v1/summarize/text", app.AuthMiddleware(http.HandlerFunc(app.SummarizeText)))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/api/", http.StripPrefix("/api", api))
