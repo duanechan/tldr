@@ -21,7 +21,7 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return token, nil
 }
 
-func CreateJWT(id uuid.UUID, username, tokenSecret string, expiresIn time.Duration) (string, error) {
+func CreateJWT(id uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "tldr",
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
