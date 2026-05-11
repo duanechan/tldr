@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
 import AppLayout from "./layouts/AppLayout";
 import ProtectedLayout from "./layouts/ProtectedLayout";
+import Home from "./pages/Home";
 
 export default function App() {
   return (
@@ -11,7 +12,7 @@ export default function App() {
 
       <Route element={<ProtectedLayout />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<>Home</>} />
+          <Route path="/" element={<Home />} />
         </Route>
       </Route>
     </Routes>

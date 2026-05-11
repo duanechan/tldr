@@ -1,3 +1,4 @@
+import { HouseIcon } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import {
   Sidebar,
@@ -9,12 +10,15 @@ import {
 
 export function AppSidebar() {
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar collapsible="icon">
+      <SidebarContent className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/">Home</Link>
+            <SidebarMenuButton className="rounded-lg" asChild>
+              <Link to="/">
+                <HouseIcon />
+                <span>Home</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
