@@ -16,7 +16,7 @@ type SummarizeResponse struct {
 	Duration int64  `json:"duration"`
 }
 
-func (t *TLDR) SummarizeDocument(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		errorResponse(w, http.StatusBadRequest, err.Error())
