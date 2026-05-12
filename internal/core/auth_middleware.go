@@ -15,13 +15,13 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			errorResponse(w, http.StatusUnauthorized, err.Error())
+			errorResponse(w, http.StatusUnauthorized, "Failed to get bearer token")
 			return
 		}
 
 		claims, err := auth.ValidateJWT(token, t.Config.JWTSecret)
 		if err != nil {
-			errorResponse(w, http.StatusUnauthorized, err.Error())
+			errorResponse(w, http.StatusUnauthorized, "Invalid token")
 			return
 		}
 

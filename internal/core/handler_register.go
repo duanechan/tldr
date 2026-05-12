@@ -20,7 +20,7 @@ const (
 func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errorResponse(w, http.StatusBadRequest, err.Error())
+		errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -47,41 +47,42 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
-	user, err := t.DB.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := t.Queries.CreateUser(r.Context(), database.CreateUserParams{
 		ID:       id,
-		Username: req.Username,
+		Username: cleanedUsername,
 		Password: hashedPassword,
 	})
 	if err != nil {
 		if sqliteErr, ok := err.(*sqlite.Error); ok {
 			if sqliteErr.Code() == 2067 {
-				errorResponse(w, http.StatusUnauthorized, "Username already taken")
+				errorResponse(w, http.StatusConflict, "Username already taken")
 				return
 			}
 		}
-		errorResponse(w, http.StatusBadRequest, err.Error())
+		t.Logger.Error("Failed to create user", "error", err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to create user")
 		return
 	}
 
 	accessToken, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to create access token")
 		return
 	}
 
 	refreshToken, err := t.insertRefreshToken(r.Context(), user)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to create refresh token")
 		return
 	}
 	t.setRefreshTokenCookie(w, *refreshToken)

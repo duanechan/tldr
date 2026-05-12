@@ -67,7 +67,7 @@ func (t *TLDR) insertRefreshToken(ctx context.Context, user database.User) (*dat
 		return nil, err
 	}
 
-	refreshToken, err := t.DB.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
+	refreshToken, err := t.Queries.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
 		ID:        refreshTokenId,
 		Token:     refreshTokenString,
 		UserID:    user.ID,

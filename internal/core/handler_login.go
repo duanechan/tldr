@@ -1,7 +1,9 @@
 package core
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -12,7 +14,7 @@ import (
 func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errorResponse(w, http.StatusBadRequest, err.Error())
+		errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -22,15 +24,20 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.DB.GetUserByName(r.Context(), cleanedUsername)
+	user, err := t.Queries.GetUserByName(r.Context(), cleanedUsername)
 	if err != nil {
-		errorResponse(w, http.StatusUnauthorized, "Invalid username/password")
+		if errors.Is(err, sql.ErrNoRows) {
+			errorResponse(w, http.StatusUnauthorized, "Invalid username/password")
+			return
+		}
+		t.Logger.Error("Failed to get user", "error", err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to get user")
 		return
 	}
 
 	matches, err := argon2id.ComparePasswordAndHash(req.Password, user.Password)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -41,13 +48,13 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, err := auth.CreateJWT(user.ID, t.Config.JWTSecret, t.Config.JWTExpiry)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to create access token")
 		return
 	}
 
 	refreshToken, err := t.insertRefreshToken(r.Context(), user)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, err.Error())
+		errorResponse(w, http.StatusInternalServerError, "Failed to create refresh token")
 		return
 	}
 

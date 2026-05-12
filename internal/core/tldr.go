@@ -17,7 +17,8 @@ import (
 type TLDR struct {
 	mux       *http.ServeMux
 	Handler   http.Handler
-	DB        *database.Queries
+	db        *sql.DB
+	Queries   *database.Queries
 	Config    *config.Config
 	Client    *genai.Client
 	Model     *genai.GenerateContentConfig
@@ -62,7 +63,8 @@ func New() (*TLDR, error) {
 	return &TLDR{
 		mux:       mux,
 		Handler:   mux,
-		DB:        database.New(db),
+		db:        db,
+		Queries:   database.New(db),
 		Config:    cfg,
 		Client:    client,
 		Model:     model,
@@ -83,4 +85,9 @@ func (t *TLDR) Use(middleware ...func(http.Handler) http.Handler) {
 	for _, m := range middleware {
 		t.Handler = m(t.Handler)
 	}
+}
+
+func (t *TLDR) CloseDB() {
+	t.Logger.Info("Closing database connection...")
+	t.db.Close()
 }
