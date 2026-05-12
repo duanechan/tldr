@@ -13,8 +13,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize app: %s", err.Error())
 	}
+	defer app.CloseDB()
 
-	app.Use(app.LogMiddleware, core.CorsMiddleware)
+	app.Use(app.PanicRecoveryMiddleware, core.CorsMiddleware, app.LogMiddleware)
 
 	api := http.NewServeMux()
 	api.HandleFunc("POST /v1/auth/register", app.Register)
