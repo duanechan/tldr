@@ -6,7 +6,7 @@ CREATE TABLE refresh_tokens (
     token TEXT UNIQUE NOT NULL,
     revoked_at DATETIME DEFAULT NULL,
     expires_at DATETIME NOT NULL,
-    user_id CHAR(36) REFERENCES users(id) ON DELETE CASCADE
+    user_id CHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- +goose StatementBegin
