@@ -23,4 +23,4 @@ sql:
           - column: "*.expires_at"
             go_type: "time.Time"
           - column: "*.revoked_at"
-            go_type: "time.Time"
+            go_type: "*time.Time"

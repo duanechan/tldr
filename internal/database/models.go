@@ -15,7 +15,7 @@ type RefreshToken struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Token     string
-	RevokedAt time.Time
+	RevokedAt **time.Time
 	ExpiresAt time.Time
 	UserID    uuid.UUID
 }
