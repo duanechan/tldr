@@ -6,3 +6,21 @@ sql:
     gen:
       go:
         out: "internal/database"
+        overrides:
+          - column: "*.id"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - column: "*.user_id"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+
+          - column: "*.created_at"
+            go_type: "time.Time"
+          - column: "*.updated_at"
+            go_type: "time.Time"
+          - column: "*.expires_at"
+            go_type: "time.Time"
+          - column: "*.revoked_at"
+            go_type: "time.Time"

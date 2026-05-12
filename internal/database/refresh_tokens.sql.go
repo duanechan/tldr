@@ -7,6 +7,9 @@ package database
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
@@ -16,10 +19,10 @@ RETURNING id, created_at, updated_at, token, revoked_at, expires_at, user_id
 `
 
 type CreateRefreshTokenParams struct {
-	ID        interface{}
+	ID        uuid.UUID
 	Token     string
-	UserID    interface{}
-	ExpiresAt string
+	UserID    uuid.UUID
+	ExpiresAt time.Time
 }
 
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error) {

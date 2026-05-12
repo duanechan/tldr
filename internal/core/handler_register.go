@@ -62,7 +62,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = t.DB.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := t.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:       id,
 		Username: req.Username,
 		Password: hashedPassword,
@@ -72,11 +72,18 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
+	accessToken, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
 	if err != nil {
 		errorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	jsonResponse(w, http.StatusCreated, authResponse{Token: token})
+	refreshToken, err := t.insertRefreshToken(r.Context(), user)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	t.setRefreshTokenCookie(w, *refreshToken)
+	jsonResponse(w, http.StatusCreated, authResponse{AccessToken: accessToken})
 }

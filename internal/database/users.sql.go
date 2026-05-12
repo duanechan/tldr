@@ -7,35 +7,32 @@ package database
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, username, password)
 VALUES (?, ?, ?)
-RETURNING id, username, created_at, updated_at
+RETURNING id, created_at, updated_at, username, password
 `
 
 type CreateUserParams struct {
-	ID       interface{}
+	ID       uuid.UUID
 	Username string
 	Password string
 }
 
-type CreateUserRow struct {
-	ID        interface{}
-	Username  string
-	CreatedAt string
-	UpdatedAt string
-}
-
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser, arg.ID, arg.Username, arg.Password)
-	var i CreateUserRow
+	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Username,
+		&i.Password,
 	)
 	return i, err
 }
@@ -47,13 +44,13 @@ WHERE id = ?
 `
 
 type GetUserByIdRow struct {
-	ID        interface{}
+	ID        uuid.UUID
 	Username  string
-	CreatedAt string
-	UpdatedAt string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func (q *Queries) GetUserById(ctx context.Context, id interface{}) (GetUserByIdRow, error) {
+func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (GetUserByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i GetUserByIdRow
 	err := row.Scan(

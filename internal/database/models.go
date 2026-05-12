@@ -5,23 +5,25 @@
 package database
 
 import (
-	"database/sql"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type RefreshToken struct {
-	ID        interface{}
-	CreatedAt string
-	UpdatedAt string
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Token     string
-	RevokedAt sql.NullString
-	ExpiresAt string
-	UserID    interface{}
+	RevokedAt time.Time
+	ExpiresAt time.Time
+	UserID    uuid.UUID
 }
 
 type User struct {
-	ID        interface{}
-	CreatedAt string
-	UpdatedAt string
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Username  string
 	Password  string
 }
