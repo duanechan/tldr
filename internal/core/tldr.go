@@ -47,7 +47,9 @@ func New() (*TLDR, error) {
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
 	}
 
-	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{})
+	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
+		APIKey: cfg.APIKey,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +61,9 @@ func New() (*TLDR, error) {
 
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}))
 	mux := http.NewServeMux()
+
+	logger.Info("config loaded", "api_key_set", cfg.APIKey != "")
+	logger.Info("config loaded", "api_key_prefix", cfg.APIKey[:8])
 
 	return &TLDR{
 		mux:       mux,
