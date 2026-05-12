@@ -93,7 +93,6 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		t.Logger.Error("JWT claims error", "claims", claims)
 		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
 		return
 	}

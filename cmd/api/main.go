@@ -27,8 +27,12 @@ func main() {
 	api.HandleFunc("POST /v1/auth/register", app.Register)
 	api.HandleFunc("POST /v1/auth/login", app.Login)
 	api.HandleFunc("POST /v1/auth/refresh", app.Refresh)
+
 	api.Handle("POST /v1/summarize/file", app.AuthMiddleware(http.HandlerFunc(app.SummarizeFile)))
 	api.Handle("POST /v1/summarize/text", app.AuthMiddleware(http.HandlerFunc(app.SummarizeText)))
+
+	api.Handle("GET /v1/tldrs", app.AuthMiddleware(http.HandlerFunc(app.GetTLDRs)))
+	api.Handle("GET /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetTLDR)))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/api/", http.StripPrefix("/api", api))
