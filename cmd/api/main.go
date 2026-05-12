@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/duanechan/tldr/internal/core"
 	_ "modernc.org/sqlite"
@@ -27,8 +33,26 @@ func main() {
 	app.Handle("/api/", http.StripPrefix("/api", api))
 	app.HandleFunc("GET /health", app.Health)
 
+	server := &http.Server{
+		Addr:    ":" + app.Config.Port,
+		Handler: app.Handler,
+	}
+
 	app.Logger.Info("Server started:", "port", app.Config.Port, "environment", app.Config.Environment)
-	if err := http.ListenAndServe(":"+app.Config.Port, app.Handler); err != nil {
-		app.Logger.Error("Error occurred:", "error", err.Error())
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			app.Logger.Error("Error occurred:", "error", err.Error())
+		}
+	}()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	app.Logger.Info("Server shutting down...")
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		app.Logger.Error("Error occurred shutting down:", "error", err.Error())
 	}
 }

@@ -88,6 +88,6 @@ func (t *TLDR) Use(middleware ...func(http.Handler) http.Handler) {
 }
 
 func (t *TLDR) CloseDB() {
-	t.Logger.Info("Closing database connection...")
+	t.Logger.Info("Database connection closed")
 	t.db.Close()
 }
