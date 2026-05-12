@@ -37,7 +37,7 @@ func New() (*TLDR, error) {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite", "./tldr.db")
+	db, err := sql.Open("sqlite", "./tldr.db?_pragma=foreign_keys(1)")
 	if err != nil {
 		return nil, err
 	}
