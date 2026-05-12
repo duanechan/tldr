@@ -9,13 +9,8 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/google/uuid"
+	"modernc.org/sqlite"
 )
-
-type registerRequest struct {
-	Username        string `json:"username"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirmPassword"`
-}
 
 const (
 	minimumUsernameLength = 3
@@ -68,6 +63,12 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	})
 	if err != nil {
+		if sqliteErr, ok := err.(*sqlite.Error); ok {
+			if sqliteErr.Code() == 2067 {
+				errorResponse(w, http.StatusUnauthorized, "Username already taken")
+				return
+			}
+		}
 		errorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -83,7 +84,6 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	t.setRefreshTokenCookie(w, *refreshToken)
 	jsonResponse(w, http.StatusCreated, authResponse{AccessToken: accessToken})
 }

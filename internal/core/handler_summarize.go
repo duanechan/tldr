@@ -9,11 +9,6 @@ import (
 	"google.golang.org/genai"
 )
 
-type SummarizeResponse struct {
-	Response string `json:"response"`
-	Duration int64  `json:"duration"`
-}
-
 func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
@@ -61,10 +56,6 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		Response: result.Text(),
 		Duration: duration.Milliseconds(),
 	})
-}
-
-type SummarizeTextRequest struct {
-	Text string `json:"text"`
 }
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {

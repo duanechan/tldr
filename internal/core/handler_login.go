@@ -7,17 +7,7 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
-	"github.com/google/uuid"
 )
-
-type loginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type authResponse struct {
-	Token string `json:"token"`
-}
 
 func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
@@ -49,17 +39,18 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := uuid.Parse(user.ID.(string))
+	accessToken, err := auth.CreateJWT(user.ID, t.Config.JWTSecret, t.Config.JWTExpiry)
 	if err != nil {
 		errorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	token, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
+	refreshToken, err := t.insertRefreshToken(r.Context(), user)
 	if err != nil {
 		errorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, authResponse{Token: token})
+	t.setRefreshTokenCookie(w, *refreshToken)
+	jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
 }

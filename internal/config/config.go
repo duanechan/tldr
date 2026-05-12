@@ -25,7 +25,7 @@ func New() (*Config, error) {
 
 	port := os.Getenv("PORT")
 	environment := os.Getenv("APP_ENV")
-	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtSecret := os.Getenv("JWT_ACCESS_SECRET")
 	jwtExpiryString := os.Getenv("JWT_ACCESS_EXPIRY_IN_SECONDS")
 	refreshExpiryString := os.Getenv("REFRESH_EXPIRY_IN_SECONDS")
 	apiModel := os.Getenv("GEMINI_MODEL")
@@ -37,7 +37,7 @@ func New() (*Config, error) {
 	}
 
 	if jwtSecret == "" {
-		return nil, errors.New("Missing JWT Secret (JWT_SECRET) environment variable")
+		return nil, errors.New("Missing JWT Access Secret (JWT_ACCESS_SECRET) environment variable")
 	}
 
 	if jwtExpiryString == "" {
