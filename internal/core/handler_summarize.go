@@ -11,8 +11,6 @@ import (
 
 type SummarizeResponse struct {
 	Response string `json:"response"`
-	Filename string `json:"filename"`
-	FileType string `json:"file_type"`
 	Duration int64  `json:"duration"`
 }
 
@@ -30,7 +28,6 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	filename := header.Filename
 	mimeType := header.Header.Get("Content-Type")
 
 	fileBytes, err := io.ReadAll(file)
@@ -62,8 +59,6 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusOK, SummarizeResponse{
 		Response: result.Text(),
-		Filename: filename,
-		FileType: mimeType,
 		Duration: duration.Milliseconds(),
 	})
 }
@@ -95,8 +90,6 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusOK, SummarizeResponse{
 		Response: result.Text(),
-		Filename: "",
-		FileType: "text/plain",
 		Duration: duration.Milliseconds(),
 	})
 }
