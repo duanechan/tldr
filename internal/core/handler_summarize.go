@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/genai"
 )
 
@@ -25,6 +26,12 @@ const (
 
 func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	if !ok {
+		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		errorResponse(w, http.StatusBadRequest, "Invalid or missing multipart form data")
 		return
@@ -68,16 +75,29 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
+		return
+	}
+
 	duration := time.Since(start)
 
 	jsonResponse(w, http.StatusOK, SummarizeResponse{
-		Response: result.Text(),
+		Response: tldr.Content,
 		Duration: duration.Milliseconds(),
 	})
 }
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	if !ok {
+		t.Logger.Error("JWT claims error", "claims", claims)
+		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
 	var req SummarizeTextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errorResponse(w, http.StatusBadRequest, "Invalid request body")
@@ -101,10 +121,16 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
+		return
+	}
+
 	duration := time.Since(start)
 
 	jsonResponse(w, http.StatusOK, SummarizeResponse{
-		Response: result.Text(),
+		Response: tldr.Content,
 		Duration: duration.Milliseconds(),
 	})
 }

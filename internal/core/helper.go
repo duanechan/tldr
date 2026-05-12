@@ -102,3 +102,27 @@ func (t *TLDR) setRefreshTokenCookie(w http.ResponseWriter, refreshToken databas
 		Secure:   t.Config.Environment == "prod",
 	})
 }
+
+func (t *TLDR) insertTLDR(ctx context.Context, subject, content string) (*database.Tldr, error) {
+	userId, err := uuid.Parse(subject)
+	if err != nil {
+		return nil, err
+	}
+
+	tldrId, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	tldr, err := t.Queries.CreateTLDR(ctx, database.CreateTLDRParams{
+		ID:      tldrId,
+		Title:   "TLDR-" + tldrId.String()[:6],
+		Content: content,
+		UserID:  userId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &tldr, nil
+}
