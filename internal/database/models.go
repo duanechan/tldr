@@ -20,6 +20,15 @@ type RefreshToken struct {
 	UserID    uuid.UUID
 }
 
+type Tldr struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Title     string
+	Content   string
+	UserID    uuid.UUID
+}
+
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
