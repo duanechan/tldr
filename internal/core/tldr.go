@@ -62,9 +62,6 @@ func New() (*TLDR, error) {
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}))
 	mux := http.NewServeMux()
 
-	logger.Info("config loaded", "api_key_set", cfg.APIKey != "")
-	logger.Info("config loaded", "api_key_prefix", cfg.APIKey[:8])
-
 	return &TLDR{
 		mux:       mux,
 		Handler:   mux,
