@@ -12,11 +12,12 @@ SELECT * FROM tldrs
 WHERE user_id = ?
     AND id = ?;
 
--- name: UpdateTLDRTitleById :exec
+-- name: UpdateTLDRTitleById :one
 UPDATE tldrs
 SET title = ?
 WHERE user_id = ?
-    AND id = ?;
+    AND id = ?
+RETURNING *;
 
 -- name: DeleteTLDRById :exec
 DELETE FROM tldrs

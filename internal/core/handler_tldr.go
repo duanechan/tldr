@@ -2,6 +2,7 @@ package core
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -68,4 +69,79 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, tldrs)
+}
+
+func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	if !ok {
+		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	tldrId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	updateRequest := database.UpdateTLDRTitleByIdParams{
+		UserID: userId,
+		ID:     tldrId,
+	}
+	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Invalid request body")
+		return
+	}
+
+	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errorResponse(w, http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			return
+		}
+		errorResponse(w, http.StatusInternalServerError, "Failed to update TLDR")
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, tldr)
+}
+
+func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	if !ok {
+		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	tldrId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	if err := t.Queries.DeleteTLDRById(r.Context(), database.DeleteTLDRByIdParams{
+		UserID: userId,
+		ID:     tldrId,
+	}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errorResponse(w, http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			return
+		}
+		errorResponse(w, http.StatusInternalServerError, "Failed to update TLDR")
+		return
+	}
+
+	jsonResponse(w, http.StatusNoContent, nil)
 }

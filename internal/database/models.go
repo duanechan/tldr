@@ -11,28 +11,28 @@ import (
 )
 
 type RefreshToken struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Token     string
-	RevokedAt **time.Time
-	ExpiresAt time.Time
-	UserID    uuid.UUID
+	ID        uuid.UUID   `json:"id"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+	Token     string      `json:"token"`
+	RevokedAt **time.Time `json:"revoked_at"`
+	ExpiresAt time.Time   `json:"expires_at"`
+	UserID    uuid.UUID   `json:"user_id"`
 }
 
 type Tldr struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Title     string
-	Content   string
-	UserID    uuid.UUID
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 type User struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Username  string
-	Password  string
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
 }

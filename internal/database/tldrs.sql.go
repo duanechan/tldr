@@ -18,10 +18,10 @@ RETURNING id, created_at, updated_at, title, content, user_id
 `
 
 type CreateTLDRParams struct {
-	ID      uuid.UUID
-	Title   string
-	Content string
-	UserID  uuid.UUID
+	ID      uuid.UUID `json:"id"`
+	Title   string    `json:"title"`
+	Content string    `json:"content"`
+	UserID  uuid.UUID `json:"user_id"`
 }
 
 func (q *Queries) CreateTLDR(ctx context.Context, arg CreateTLDRParams) (Tldr, error) {
@@ -50,8 +50,8 @@ WHERE user_id = ?
 `
 
 type DeleteTLDRByIdParams struct {
-	UserID uuid.UUID
-	ID     uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) DeleteTLDRById(ctx context.Context, arg DeleteTLDRByIdParams) error {
@@ -66,8 +66,8 @@ WHERE user_id = ?
 `
 
 type GetTLDRByIdParams struct {
-	UserID uuid.UUID
-	ID     uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) GetTLDRById(ctx context.Context, arg GetTLDRByIdParams) (Tldr, error) {
@@ -119,20 +119,30 @@ func (q *Queries) GetTLDRsByUser(ctx context.Context, userID uuid.UUID) ([]Tldr,
 	return items, nil
 }
 
-const updateTLDRTitleById = `-- name: UpdateTLDRTitleById :exec
+const updateTLDRTitleById = `-- name: UpdateTLDRTitleById :one
 UPDATE tldrs
 SET title = ?
 WHERE user_id = ?
     AND id = ?
+RETURNING id, created_at, updated_at, title, content, user_id
 `
 
 type UpdateTLDRTitleByIdParams struct {
-	Title  string
-	UserID uuid.UUID
-	ID     uuid.UUID
+	Title  string    `json:"title"`
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateTLDRTitleById(ctx context.Context, arg UpdateTLDRTitleByIdParams) error {
-	_, err := q.db.ExecContext(ctx, updateTLDRTitleById, arg.Title, arg.UserID, arg.ID)
-	return err
+func (q *Queries) UpdateTLDRTitleById(ctx context.Context, arg UpdateTLDRTitleByIdParams) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, updateTLDRTitleById, arg.Title, arg.UserID, arg.ID)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
 }
