@@ -41,6 +41,8 @@ func main() {
 	api.Handle("PUT /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
 	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.DeleteTLDR)))
 
+	api.Handle("GET /v1/users/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
+
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/api/", http.StripPrefix("/api", api))
 	app.HandleFunc("GET /health", app.Health)
