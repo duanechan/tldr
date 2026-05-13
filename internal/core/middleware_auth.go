@@ -21,7 +21,19 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		userId, err := claims.GetSubject()
+		if err != nil {
+			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid user ID")
+			return
+		}
+
+		requestId, ok := r.Context().Value(requestIdKey).(string)
+		if !ok {
+			requestId = "NOID"
+		}
+
 		ctx := context.WithValue(r.Context(), claimsKey, claims)
+		t.Logger.Info("Authenticated Request:", "id", requestId, "user_id", userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -77,6 +77,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
 	if err != nil {
+		t.Logger.Error("Failed to create TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}
@@ -122,6 +123,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 
 	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
 	if err != nil {
+		t.Logger.Error("Failed to create TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}

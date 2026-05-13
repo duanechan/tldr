@@ -54,6 +54,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken, err := t.insertRefreshToken(r.Context(), user)
 	if err != nil {
+		t.Logger.Info("Failed to create refresh token", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create refresh token")
 		return
 	}

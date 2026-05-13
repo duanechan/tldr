@@ -39,6 +39,7 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 			t.errorResponse(w, r.Context(), http.StatusNotFound, "TLDR not found")
 			return
 		}
+		t.Logger.Error("Failed to get TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR with ID: "+tldrId.String())
 		return
 	}
@@ -61,10 +62,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, "TLDR not found")
-			return
-		}
+		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
 		return
 	}
@@ -103,9 +101,10 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to update TLDR with ID: "+tldrId.String())
 			return
 		}
+		t.Logger.Error("Failed to update TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update TLDR")
 		return
 	}
@@ -137,9 +136,10 @@ func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		ID:     tldrId,
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to delete TLDR with ID: "+tldrId.String())
 			return
 		}
+		t.Logger.Error("Failed to delete TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to delete TLDR")
 		return
 	}
