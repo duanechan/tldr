@@ -10,6 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type Admin struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
 type RefreshToken struct {
 	ID        uuid.UUID   `json:"id"`
 	CreatedAt time.Time   `json:"created_at"`

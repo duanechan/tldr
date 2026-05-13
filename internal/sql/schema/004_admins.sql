@@ -1,0 +1,9 @@
+-- +goose Up
+CREATE TABLE admins(
+    id CHAR(36) PRIMARY KEY,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    user_id CHAR(36) UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE admins;
