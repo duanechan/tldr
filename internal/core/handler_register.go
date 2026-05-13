@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,29 +20,29 @@ const (
 
 func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
+	fieldErrors := []FieldError{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	cleanedUsername := strings.TrimSpace(req.Username)
-	if cleanedUsername == "" || strings.TrimSpace(req.Password) == "" {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Username/password is required")
-		return
+	if cleanedUsername == "" {
+		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: "Username is required"})
+	} else if len(cleanedUsername) < minimumUsernameLength {
+		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)})
 	}
 
-	if len(cleanedUsername) < minimumUsernameLength {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Username must be at least 3 characters long")
-		return
+	if strings.TrimSpace(req.Password) == "" {
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Password is required"})
+	} else if len(req.Password) < minimumPasswordLength {
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)})
+	} else if req.Password != req.ConfirmPassword {
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Passwords do not match"})
 	}
 
-	if req.Password != req.ConfirmPassword {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Passwords do not match")
-		return
-	}
-
-	if len(req.Password) < minimumPasswordLength {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Password must be at least 8 characters long")
+	if len(fieldErrors) > 0 {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to validate credentials", fieldErrors...)
 		return
 	}
 

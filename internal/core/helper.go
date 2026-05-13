@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code int, message string) {
+func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code int, message string, fieldErrors ...FieldError) {
 	requestId, ok := ctx.Value(requestIdKey).(string)
 	if !ok {
 		t.Logger.Error("Failed to get request ID")
@@ -23,6 +23,7 @@ func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code in
 		Code:      code,
 		RequestID: requestId,
 		Message:   message,
+		Errors:    fieldErrors,
 	})
 }
 
