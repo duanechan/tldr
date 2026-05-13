@@ -6,11 +6,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/duanechan/tldr/internal/config"
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/lmittmann/tint"
+	"golang.org/x/time/rate"
 	"google.golang.org/genai"
 )
 
@@ -24,6 +26,8 @@ type TLDR struct {
 	Model     *genai.GenerateContentConfig
 	Logger    *slog.Logger
 	startedAt time.Time
+	mu        *sync.RWMutex
+	clients   map[string]*rate.Limiter
 }
 
 const prompt = `
@@ -72,6 +76,8 @@ func New() (*TLDR, error) {
 		Model:     model,
 		Logger:    logger,
 		startedAt: time.Now(),
+		mu:        &sync.RWMutex{},
+		clients:   make(map[string]*rate.Limiter),
 	}, nil
 }
 
