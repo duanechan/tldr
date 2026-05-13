@@ -38,7 +38,7 @@ func main() {
 
 	api.Handle("GET /v1/tldrs", app.AuthMiddleware(http.HandlerFunc(app.GetTLDRs)))
 	api.Handle("GET /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetTLDR)))
-	api.Handle("PUT /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
+	api.Handle("PATCH /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
 	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.DeleteTLDR)))
 
 	api.Handle("GET /v1/users/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
