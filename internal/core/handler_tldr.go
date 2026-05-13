@@ -14,19 +14,19 @@ import (
 func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -36,10 +36,10 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, http.StatusNotFound, "TLDR not found")
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "TLDR not found")
 			return
 		}
-		t.errorResponse(w, http.StatusInternalServerError, "Failed to get TLDR with ID: "+tldrId.String())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR with ID: "+tldrId.String())
 		return
 	}
 
@@ -49,23 +49,23 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), userId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, http.StatusNotFound, "TLDR not found")
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "TLDR not found")
 			return
 		}
-		t.errorResponse(w, http.StatusInternalServerError, "Failed to get TLDRs")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
 		return
 	}
 
@@ -75,19 +75,19 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -96,17 +96,17 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 		ID:     tldrId,
 	}
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Invalid request body")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Invalid request body")
 		return
 	}
 
 	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
 			return
 		}
-		t.errorResponse(w, http.StatusInternalServerError, "Failed to update TLDR")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update TLDR")
 		return
 	}
 
@@ -116,19 +116,19 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -137,10 +137,10 @@ func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		ID:     tldrId,
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
+			t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to get TLDR with ID: "+tldrId.String())
 			return
 		}
-		t.errorResponse(w, http.StatusInternalServerError, "Failed to delete TLDR")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to delete TLDR")
 		return
 	}
 

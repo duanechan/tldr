@@ -40,3 +40,10 @@ type FieldError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 }
+
+type contextKey string
+
+const (
+	claimsKey    contextKey = "claims"
+	requestIdKey contextKey = "requestId"
+)

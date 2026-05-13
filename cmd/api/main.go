@@ -21,7 +21,12 @@ func main() {
 	}
 	defer app.CloseDB()
 
-	app.Use(app.PanicRecoveryMiddleware, core.CorsMiddleware, app.LogMiddleware)
+	app.Use(
+		app.PanicRecoveryMiddleware,
+		core.CorsMiddleware,
+		app.LogMiddleware,
+		app.RequestIDMiddleware,
+	)
 
 	api := http.NewServeMux()
 	api.HandleFunc("POST /v1/auth/register", app.Register)

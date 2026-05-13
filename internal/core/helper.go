@@ -11,13 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) errorResponse(w http.ResponseWriter, code int, message string) {
+func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code int, message string) {
+	requestId, ok := ctx.Value(requestIdKey).(string)
+	if !ok {
+		t.Logger.Error("Failed to get request ID")
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	id := uuid.Must(uuid.NewRandom())
 	t.jsonResponse(w, code, ErrorResponse{
 		Code:      code,
-		RequestID: id.String(),
+		RequestID: requestId,
 		Message:   message,
 	})
 }

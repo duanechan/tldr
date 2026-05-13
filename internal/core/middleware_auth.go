@@ -7,21 +7,17 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
-type contextKey string
-
-const claimsKey contextKey = "claims"
-
 func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			t.errorResponse(w, http.StatusUnauthorized, "Failed to get bearer token")
+			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Failed to get bearer token")
 			return
 		}
 
 		claims, err := auth.ValidateJWT(token, t.Config.JWTSecret)
 		if err != nil {
-			t.errorResponse(w, http.StatusUnauthorized, "Invalid token")
+			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid token")
 			return
 		}
 
