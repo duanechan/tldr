@@ -10,7 +10,7 @@ func (t *TLDR) PanicRecoveryMiddleware(next http.Handler) http.Handler {
 		defer func() {
 			if v := recover(); v != nil {
 				t.Logger.Error("Server panicked:", "stack", string(debug.Stack()), "value", v)
-				errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+				t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 			}
 		}()
 		next.ServeHTTP(w, r)

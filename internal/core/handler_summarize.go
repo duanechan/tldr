@@ -28,31 +28,31 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
-		errorResponse(w, http.StatusBadRequest, "Invalid or missing multipart form data")
+		t.errorResponse(w, http.StatusBadRequest, "Invalid or missing multipart form data")
 		return
 	}
 
 	file, header, err := r.FormFile("document")
 	if err != nil {
-		errorResponse(w, http.StatusBadRequest, "Invalid or missing document field")
+		t.errorResponse(w, http.StatusBadRequest, "Invalid or missing document field")
 		return
 	}
 	defer file.Close()
 
 	mimeType := header.Header.Get("Content-Type")
 	if !slices.Contains(allowedFileTypes, mimeType) {
-		errorResponse(w, http.StatusBadRequest, "File type not supported")
+		t.errorResponse(w, http.StatusBadRequest, "File type not supported")
 		return
 	}
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -71,19 +71,19 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		t.Model,
 	)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
+		t.errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}
 
 	duration := time.Since(start)
 
-	jsonResponse(w, http.StatusOK, SummarizeResponse{
+	t.jsonResponse(w, http.StatusOK, SummarizeResponse{
 		Response: tldr.Content,
 		Duration: duration.Milliseconds(),
 	})
@@ -93,19 +93,19 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
-		errorResponse(w, http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(w, http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
 	var req SummarizeTextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errorResponse(w, http.StatusBadRequest, "Invalid request body")
+		t.errorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	cleanedText := strings.TrimSpace(req.Text)
 	if cleanedText == "" {
-		errorResponse(w, http.StatusBadRequest, "Text is required")
+		t.errorResponse(w, http.StatusBadRequest, "Text is required")
 		return
 	}
 
@@ -116,19 +116,19 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		t.Model,
 	)
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
 	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
+		t.errorResponse(w, http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}
 
 	duration := time.Since(start)
 
-	jsonResponse(w, http.StatusOK, SummarizeResponse{
+	t.jsonResponse(w, http.StatusOK, SummarizeResponse{
 		Response: tldr.Content,
 		Duration: duration.Milliseconds(),
 	})

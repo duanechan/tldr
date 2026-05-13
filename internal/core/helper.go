@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,47 +11,36 @@ import (
 	"github.com/google/uuid"
 )
 
-func errorResponse(w http.ResponseWriter, code int, message string) {
+func (t *TLDR) errorResponse(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 
-	body, err := json.Marshal(struct {
-		Error string
-		Code  int
-	}{
-		Error: message,
-		Code:  code,
+	id := uuid.Must(uuid.NewRandom())
+	t.jsonResponse(w, code, ErrorResponse{
+		Code:      code,
+		RequestID: id.String(),
+		Message:   message,
 	})
-	if err != nil {
-		log.Printf("marshal error: %v", err)
-		code = http.StatusInternalServerError
-		body = []byte(`{"error":"Something went wrong"}`)
-	}
-
-	w.WriteHeader(code)
-
-	if n, err := w.Write(body); err != nil {
-		log.Printf("write error: %v", err)
-	} else if n < len(body) {
-		log.Printf("short write: wrote %d of %d bytes", n, len(body))
-	}
 }
 
-func jsonResponse(w http.ResponseWriter, code int, payload any) {
+func (t *TLDR) jsonResponse(w http.ResponseWriter, code int, payload any) {
+	if code == http.StatusNoContent {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("marshal error: %v", err)
+		t.Logger.Error("Marshal error:", "error", err.Error())
 		code = http.StatusInternalServerError
 		body = []byte(`{"error":"Something went wrong"}`)
 	}
 
 	w.WriteHeader(code)
 
-	if n, err := w.Write(body); err != nil {
-		log.Printf("write error: %v", err)
-	} else if n < len(body) {
-		log.Printf("short write: wrote %d of %d bytes", n, len(body))
+	if _, err := w.Write(body); err != nil {
+		t.Logger.Error("Write error:", "error", err.Error())
 	}
 }
 
