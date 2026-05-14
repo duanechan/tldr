@@ -3,7 +3,7 @@ INSERT INTO users (id, username, password)
 VALUES (?, ?, ?)
 RETURNING *;
 
--- name: GetUsers :many
+-- name: AdminGetUsers :many
 SELECT * FROM users;
 
 -- name: GetUserById :one

@@ -98,7 +98,7 @@ func (t *TLDR) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := t.Queries.GetUsers(r.Context())
+	users, err := t.Queries.AdminGetUsers(r.Context())
 	if errors.Is(err, sql.ErrNoRows) {
 		t.jsonResponse(w, http.StatusOK, []database.User{})
 		return
