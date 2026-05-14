@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
@@ -49,7 +49,7 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
@@ -77,7 +77,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldrs)
 }
 
-func (t *TLDR) GetTLDRById(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
@@ -99,7 +99,7 @@ func (t *TLDR) GetTLDRById(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) GetAllTLDRs(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	tldrs, err := t.Queries.GetAllTLDRs(r.Context())
 	if errors.Is(err, sql.ErrNoRows) {
 		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
@@ -115,7 +115,7 @@ func (t *TLDR) GetAllTLDRs(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldrs)
 }
 
-func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
@@ -158,7 +158,7 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) UpdateTLDRById(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	var updateRequest database.UpdateTLDRTitleParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
@@ -188,7 +188,7 @@ func (t *TLDR) UpdateTLDRById(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")

@@ -37,17 +37,17 @@ func main() {
 	api.Handle("POST /v1/summarize/file", app.AuthMiddleware(http.HandlerFunc(app.SummarizeFile)))
 	api.Handle("POST /v1/summarize/text", app.AuthMiddleware(http.HandlerFunc(app.SummarizeText)))
 
-	api.Handle("GET /v1/tldrs", app.AuthMiddleware(http.HandlerFunc(app.GetTLDRs)))
-	api.Handle("GET /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetTLDR)))
-	api.Handle("PATCH /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
-	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.DeleteTLDR)))
+	api.Handle("GET /v1/tldrs", app.AuthMiddleware(http.HandlerFunc(app.UserGetTLDRs)))
+	api.Handle("GET /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UserGetTLDR)))
+	api.Handle("PATCH /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UserUpdateTLDR)))
+	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UserDeleteTLDR)))
 
 	api.Handle("GET /v1/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
 
 	admin := http.NewServeMux()
-	admin.Handle("GET /tldrs", http.HandlerFunc(app.GetAllTLDRs))
-	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.GetTLDRById))
-	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.UpdateTLDRById))
+	admin.Handle("GET /tldrs", http.HandlerFunc(app.AdminGetTLDRs))
+	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.AdminGetTLDR))
+	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.AdminUpdateTLDR))
 	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
 	}))
