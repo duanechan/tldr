@@ -25,11 +25,12 @@ func (t *TLDR) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := t.Queries.GetUserById(r.Context(), userId)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid session")
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid session")
-			return
-		}
 		t.Logger.Error("Failed to get user", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
 		return
@@ -64,17 +65,16 @@ func (t *TLDR) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := t.Queries.GetUserById(r.Context(), requestedUserId)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("User with ID: %s not found", requestedUserId))
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("User with ID: %s not found", requestedUserId))
-			return
-		}
 		t.Logger.Error("Failed to get user", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
 		return
 	}
-
-	t.Logger.Debug("debug", "secret", t.Config.JWTSecret)
 
 	t.jsonResponse(w, http.StatusOK, user)
 }
@@ -99,13 +99,15 @@ func (t *TLDR) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	users, err := t.Queries.GetUsers(r.Context())
+	if errors.Is(err, sql.ErrNoRows) {
+		t.jsonResponse(w, http.StatusOK, []database.User{})
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.jsonResponse(w, http.StatusOK, []database.User{})
-			return
-		}
 		t.Logger.Error("Failed to get users", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get users")
+		return
 	}
 
 	t.jsonResponse(w, http.StatusOK, users)
