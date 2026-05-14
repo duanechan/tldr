@@ -31,7 +31,7 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.Queries.GetTLDRFromUser(r.Context(), database.GetTLDRFromUserParams{
+	tldr, err := t.Queries.GetTLDRByIDAndUser(r.Context(), database.GetTLDRByIDAndUserParams{
 		UserID: userId,
 		ID:     tldrId,
 	})
@@ -62,7 +62,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldrs, err := t.Queries.GetTLDRsFromUser(r.Context(), userId)
+	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
 		return

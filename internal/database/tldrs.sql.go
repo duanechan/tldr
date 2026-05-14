@@ -93,6 +93,31 @@ func (q *Queries) GetAllTLDRs(ctx context.Context) ([]Tldr, error) {
 	return items, nil
 }
 
+const getTLDRByIDAndUser = `-- name: GetTLDRByIDAndUser :one
+SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+WHERE user_id = ?
+    AND id = ?
+`
+
+type GetTLDRByIDAndUserParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) GetTLDRByIDAndUser(ctx context.Context, arg GetTLDRByIDAndUserParams) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, getTLDRByIDAndUser, arg.UserID, arg.ID)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const getTLDRById = `-- name: GetTLDRById :one
 SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
 WHERE id = ?
@@ -112,38 +137,13 @@ func (q *Queries) GetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
 	return i, err
 }
 
-const getTLDRFromUser = `-- name: GetTLDRFromUser :one
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-WHERE user_id = ?
-    AND id = ?
-`
-
-type GetTLDRFromUserParams struct {
-	UserID uuid.UUID `json:"user_id"`
-	ID     uuid.UUID `json:"id"`
-}
-
-func (q *Queries) GetTLDRFromUser(ctx context.Context, arg GetTLDRFromUserParams) (Tldr, error) {
-	row := q.db.QueryRowContext(ctx, getTLDRFromUser, arg.UserID, arg.ID)
-	var i Tldr
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Title,
-		&i.Content,
-		&i.UserID,
-	)
-	return i, err
-}
-
-const getTLDRsFromUser = `-- name: GetTLDRsFromUser :many
+const getTLDRsByUser = `-- name: GetTLDRsByUser :many
 SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
 WHERE user_id = ?
 `
 
-func (q *Queries) GetTLDRsFromUser(ctx context.Context, userID uuid.UUID) ([]Tldr, error) {
-	rows, err := q.db.QueryContext(ctx, getTLDRsFromUser, userID)
+func (q *Queries) GetTLDRsByUser(ctx context.Context, userID uuid.UUID) ([]Tldr, error) {
+	rows, err := q.db.QueryContext(ctx, getTLDRsByUser, userID)
 	if err != nil {
 		return nil, err
 	}

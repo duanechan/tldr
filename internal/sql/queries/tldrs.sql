@@ -3,11 +3,11 @@ INSERT INTO tldrs (id, title, content, user_id)
 VALUES (?, ?, ?, ?)
 RETURNING *;
 
--- name: GetTLDRsFromUser :many
+-- name: GetTLDRsByUser :many
 SELECT * FROM tldrs
 WHERE user_id = ?;
 
--- name: GetTLDRFromUser :one
+-- name: GetTLDRByIDAndUser :one
 SELECT * FROM tldrs
 WHERE user_id = ?
     AND id = ?;

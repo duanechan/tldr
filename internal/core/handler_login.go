@@ -24,7 +24,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.Queries.GetUserByName(r.Context(), cleanedUsername)
+	user, err := t.Queries.GetUserCredentialsByUsername(r.Context(), cleanedUsername)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid username/password")
@@ -52,7 +52,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := t.insertRefreshToken(r.Context(), user)
+	refreshToken, err := t.insertRefreshToken(r.Context(), user.ID)
 	if err != nil {
 		t.Logger.Info("Failed to create refresh token", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create refresh token")

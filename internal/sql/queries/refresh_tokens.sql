@@ -3,10 +3,6 @@ INSERT INTO refresh_tokens (id, token, user_id, expires_at)
 VALUES (?, ?, ?, ?)
 RETURNING *;
 
--- name: GetRefreshToken :one
-SELECT * FROM refresh_tokens
-WHERE token = ?;
-
 -- name: RevokeRefreshToken :exec
 UPDATE refresh_tokens
 SET updated_at = CURRENT_TIMESTAMP, revoked_at = CURRENT_TIMESTAMP

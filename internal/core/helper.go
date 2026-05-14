@@ -49,7 +49,7 @@ func (t *TLDR) jsonResponse(w http.ResponseWriter, code int, payload any) {
 	}
 }
 
-func (t *TLDR) insertRefreshToken(ctx context.Context, user database.User) (*database.RefreshToken, error) {
+func (t *TLDR) insertRefreshToken(ctx context.Context, id uuid.UUID) (*database.RefreshToken, error) {
 	refreshTokenId, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (t *TLDR) insertRefreshToken(ctx context.Context, user database.User) (*dat
 	refreshToken, err := t.Queries.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
 		ID:        refreshTokenId,
 		Token:     refreshTokenString,
-		UserID:    user.ID,
+		UserID:    id,
 		ExpiresAt: time.Now().Add(t.Config.RefreshExpiry),
 	})
 	if err != nil {

@@ -40,13 +40,13 @@ func (q *Queries) DeleteAdmin(ctx context.Context, userID uuid.UUID) error {
 }
 
 const isAdmin = `-- name: IsAdmin :one
-SELECT id, created_at, user_id FROM admins
+SELECT user_id FROM admins
 WHERE user_id = ?
 `
 
-func (q *Queries) IsAdmin(ctx context.Context, userID uuid.UUID) (Admin, error) {
+func (q *Queries) IsAdmin(ctx context.Context, userID uuid.UUID) (uuid.UUID, error) {
 	row := q.db.QueryRowContext(ctx, isAdmin, userID)
-	var i Admin
-	err := row.Scan(&i.ID, &i.CreatedAt, &i.UserID)
-	return i, err
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
 }

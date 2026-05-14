@@ -8,5 +8,5 @@ DELETE FROM admins
 WHERE user_id = ?;
 
 -- name: IsAdmin :one
-SELECT * FROM admins
+SELECT user_id FROM admins
 WHERE user_id = ?;

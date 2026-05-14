@@ -62,25 +62,6 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (GetUserByIdRow
 	return i, err
 }
 
-const getUserByName = `-- name: GetUserByName :one
-SELECT id, created_at, updated_at, username, password
-FROM users
-WHERE username = ?
-`
-
-func (q *Queries) GetUserByName(ctx context.Context, username string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByName, username)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Username,
-		&i.Password,
-	)
-	return i, err
-}
-
 const getUserByRefreshToken = `-- name: GetUserByRefreshToken :one
 SELECT users.id, users.created_at, users.updated_at, users.username, users.password FROM users
 INNER JOIN refresh_tokens ON users.id = refresh_tokens.user_id
@@ -99,6 +80,25 @@ func (q *Queries) GetUserByRefreshToken(ctx context.Context, token string) (User
 		&i.Username,
 		&i.Password,
 	)
+	return i, err
+}
+
+const getUserCredentialsByUsername = `-- name: GetUserCredentialsByUsername :one
+SELECT id, username, password
+FROM users
+WHERE username = ?
+`
+
+type GetUserCredentialsByUsernameRow struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Password string    `json:"password"`
+}
+
+func (q *Queries) GetUserCredentialsByUsername(ctx context.Context, username string) (GetUserCredentialsByUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserCredentialsByUsername, username)
+	var i GetUserCredentialsByUsernameRow
+	err := row.Scan(&i.ID, &i.Username, &i.Password)
 	return i, err
 }
 

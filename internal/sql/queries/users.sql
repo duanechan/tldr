@@ -11,8 +11,8 @@ SELECT id, username, created_at, updated_at
 FROM users
 WHERE id = ?;
 
--- name: GetUserByName :one
-SELECT *
+-- name: GetUserCredentialsByUsername :one
+SELECT id, username, password
 FROM users
 WHERE username = ?;
 
