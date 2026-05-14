@@ -3,27 +3,30 @@ INSERT INTO tldrs (id, title, content, user_id)
 VALUES (?, ?, ?, ?)
 RETURNING *;
 
--- name: GetTLDRsByUser :many
+-- name: GetTLDRsFromUser :many
 SELECT * FROM tldrs
 WHERE user_id = ?;
 
--- name: GetTLDRById :one
+-- name: GetTLDRFromUser :one
 SELECT * FROM tldrs
 WHERE user_id = ?
     AND id = ?;
 
--- name: AdminGetTLDRById :one
+-- name: GetTLDRById :one
 SELECT * FROM tldrs
 WHERE id = ?;
 
--- name: UpdateTLDRTitleById :one
+-- name: GetAllTLDRs :many
+SELECT * FROM tldrs;
+
+-- name: UpdateTLDRTitle :one
 UPDATE tldrs
 SET title = ?
 WHERE user_id = ?
     AND id = ?
 RETURNING *;
 
--- name: DeleteTLDRById :exec
+-- name: DeleteTLDR :exec
 DELETE FROM tldrs
 WHERE user_id = ?
     AND id = ?;

@@ -11,25 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const adminGetTLDRById = `-- name: AdminGetTLDRById :one
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-WHERE id = ?
-`
-
-func (q *Queries) AdminGetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
-	row := q.db.QueryRowContext(ctx, adminGetTLDRById, id)
-	var i Tldr
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Title,
-		&i.Content,
-		&i.UserID,
-	)
-	return i, err
-}
-
 const createTLDR = `-- name: CreateTLDR :one
 INSERT INTO tldrs (id, title, content, user_id)
 VALUES (?, ?, ?, ?)
@@ -62,54 +43,28 @@ func (q *Queries) CreateTLDR(ctx context.Context, arg CreateTLDRParams) (Tldr, e
 	return i, err
 }
 
-const deleteTLDRById = `-- name: DeleteTLDRById :exec
+const deleteTLDR = `-- name: DeleteTLDR :exec
 DELETE FROM tldrs
 WHERE user_id = ?
     AND id = ?
 `
 
-type DeleteTLDRByIdParams struct {
+type DeleteTLDRParams struct {
 	UserID uuid.UUID `json:"user_id"`
 	ID     uuid.UUID `json:"id"`
 }
 
-func (q *Queries) DeleteTLDRById(ctx context.Context, arg DeleteTLDRByIdParams) error {
-	_, err := q.db.ExecContext(ctx, deleteTLDRById, arg.UserID, arg.ID)
+func (q *Queries) DeleteTLDR(ctx context.Context, arg DeleteTLDRParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTLDR, arg.UserID, arg.ID)
 	return err
 }
 
-const getTLDRById = `-- name: GetTLDRById :one
+const getAllTLDRs = `-- name: GetAllTLDRs :many
 SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-WHERE user_id = ?
-    AND id = ?
 `
 
-type GetTLDRByIdParams struct {
-	UserID uuid.UUID `json:"user_id"`
-	ID     uuid.UUID `json:"id"`
-}
-
-func (q *Queries) GetTLDRById(ctx context.Context, arg GetTLDRByIdParams) (Tldr, error) {
-	row := q.db.QueryRowContext(ctx, getTLDRById, arg.UserID, arg.ID)
-	var i Tldr
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Title,
-		&i.Content,
-		&i.UserID,
-	)
-	return i, err
-}
-
-const getTLDRsByUser = `-- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-WHERE user_id = ?
-`
-
-func (q *Queries) GetTLDRsByUser(ctx context.Context, userID uuid.UUID) ([]Tldr, error) {
-	rows, err := q.db.QueryContext(ctx, getTLDRsByUser, userID)
+func (q *Queries) GetAllTLDRs(ctx context.Context) ([]Tldr, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTLDRs)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +93,86 @@ func (q *Queries) GetTLDRsByUser(ctx context.Context, userID uuid.UUID) ([]Tldr,
 	return items, nil
 }
 
-const updateTLDRTitleById = `-- name: UpdateTLDRTitleById :one
+const getTLDRById = `-- name: GetTLDRById :one
+SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+WHERE id = ?
+`
+
+func (q *Queries) GetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, getTLDRById, id)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getTLDRFromUser = `-- name: GetTLDRFromUser :one
+SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+WHERE user_id = ?
+    AND id = ?
+`
+
+type GetTLDRFromUserParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) GetTLDRFromUser(ctx context.Context, arg GetTLDRFromUserParams) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, getTLDRFromUser, arg.UserID, arg.ID)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getTLDRsFromUser = `-- name: GetTLDRsFromUser :many
+SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+WHERE user_id = ?
+`
+
+func (q *Queries) GetTLDRsFromUser(ctx context.Context, userID uuid.UUID) ([]Tldr, error) {
+	rows, err := q.db.QueryContext(ctx, getTLDRsFromUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tldr
+	for rows.Next() {
+		var i Tldr
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Content,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTLDRTitle = `-- name: UpdateTLDRTitle :one
 UPDATE tldrs
 SET title = ?
 WHERE user_id = ?
@@ -146,14 +180,14 @@ WHERE user_id = ?
 RETURNING id, created_at, updated_at, title, content, user_id
 `
 
-type UpdateTLDRTitleByIdParams struct {
+type UpdateTLDRTitleParams struct {
 	Title  string    `json:"title"`
 	UserID uuid.UUID `json:"user_id"`
 	ID     uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateTLDRTitleById(ctx context.Context, arg UpdateTLDRTitleByIdParams) (Tldr, error) {
-	row := q.db.QueryRowContext(ctx, updateTLDRTitleById, arg.Title, arg.UserID, arg.ID)
+func (q *Queries) UpdateTLDRTitle(ctx context.Context, arg UpdateTLDRTitleParams) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, updateTLDRTitle, arg.Title, arg.UserID, arg.ID)
 	var i Tldr
 	err := row.Scan(
 		&i.ID,

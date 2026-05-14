@@ -123,7 +123,7 @@ func (t *TLDR) insertTLDR(ctx context.Context, subject, content string) (*databa
 }
 
 func (t *TLDR) getTLDRAsAdmin(ctx context.Context, userId, tldrId uuid.UUID) (database.Tldr, error) {
-	tldr, err := t.Queries.AdminGetTLDRById(ctx, tldrId)
+	tldr, err := t.Queries.GetTLDRById(ctx, tldrId)
 	if err != nil {
 		return database.Tldr{}, err
 	}

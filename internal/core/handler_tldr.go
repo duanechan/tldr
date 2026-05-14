@@ -31,29 +31,12 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.Queries.GetTLDRById(r.Context(), database.GetTLDRByIdParams{
+	tldr, err := t.Queries.GetTLDRFromUser(r.Context(), database.GetTLDRFromUserParams{
 		UserID: userId,
 		ID:     tldrId,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		tldr, err = t.getTLDRAsAdmin(r.Context(), userId, tldrId)
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()))
-			return
-		}
-
-		if errors.Is(err, ErrNotAdmin) {
-			t.errorResponse(w, r.Context(), http.StatusForbidden, "You are not allowed to access or perform any actions to this resource")
-			return
-		}
-
-		if err != nil {
-			t.Logger.Error("Failed to get TLDR", "error", err.Error())
-			t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR")
-			return
-		}
-
-		t.jsonResponse(w, http.StatusOK, tldr)
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()))
 		return
 	}
 
@@ -79,7 +62,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), userId)
+	tldrs, err := t.Queries.GetTLDRsFromUser(r.Context(), userId)
 	if err != nil {
 		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
@@ -108,7 +91,7 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateRequest := database.UpdateTLDRTitleByIdParams{
+	updateRequest := database.UpdateTLDRTitleParams{
 		UserID: userId,
 		ID:     tldrId,
 	}
@@ -117,12 +100,13 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
+	tldr, err := t.Queries.UpdateTLDRTitle(r.Context(), updateRequest)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()))
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()))
-			return
-		}
 		t.Logger.Error("Failed to update TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update TLDR")
 		return
@@ -150,7 +134,7 @@ func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := t.Queries.DeleteTLDRById(r.Context(), database.DeleteTLDRByIdParams{
+	if err := t.Queries.DeleteTLDR(r.Context(), database.DeleteTLDRParams{
 		UserID: userId,
 		ID:     tldrId,
 	}); err != nil {
