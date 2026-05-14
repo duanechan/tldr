@@ -32,9 +32,11 @@ type TLDR struct {
 
 const prompt = `
 You are a document summarizer.
-Summarize the documents, text files, raw text (even if brief), or images that are provided to you.
+Summarize the documents, text files, raw text, or images that are provided to you.
 Extract its keypoints, if necessary, and ensure the user understands what the contents are.
-Do not ask for more input.`
+Keep it brief and simple (250-500 words).
+Do not ask for more input.
+`
 
 func New() (*TLDR, error) {
 	cfg, err := config.New()
