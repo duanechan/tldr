@@ -63,13 +63,12 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		Username: cleanedUsername,
 		Password: hashedPassword,
 	})
+	if sqliteErr, ok := err.(*sqlite.Error); ok && sqliteErr.Code() == sqliteUniqueConstraint {
+		t.errorResponse(w, r.Context(), http.StatusConflict, "Username already taken")
+		return
+	}
+
 	if err != nil {
-		if sqliteErr, ok := err.(*sqlite.Error); ok {
-			if sqliteErr.Code() == 2067 {
-				t.errorResponse(w, r.Context(), http.StatusConflict, "Username already taken")
-				return
-			}
-		}
 		t.Logger.Error("Failed to create user", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create user")
 		return

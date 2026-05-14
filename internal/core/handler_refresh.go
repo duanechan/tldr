@@ -23,11 +23,12 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 	token := cookie.Value
 
 	user, err := t.Queries.GetUserByRefreshToken(r.Context(), token)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid or expired token")
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid or expired token")
-			return
-		}
 		t.Logger.Error("Failed to get user", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
 		return

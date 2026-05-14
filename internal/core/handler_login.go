@@ -25,11 +25,12 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := t.Queries.GetUserCredentialsByUsername(r.Context(), cleanedUsername)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid username/password")
+		return
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid username/password")
-			return
-		}
 		t.Logger.Error("Failed to get user", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
 		return

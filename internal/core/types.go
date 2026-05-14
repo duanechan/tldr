@@ -41,6 +41,8 @@ type FieldError struct {
 	Message string `json:"message"`
 }
 
+const sqliteUniqueConstraint = 2067
+
 type contextKey string
 
 const (
