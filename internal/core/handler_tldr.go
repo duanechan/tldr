@@ -21,13 +21,13 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (t *TLDR) GetTLDR(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		t.Logger.Error("Failed to get TLDR", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR with ID: "+tldrId.String())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR with ID")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
 		return
 	}
 
@@ -80,7 +80,7 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) GetTLDRById(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
 		return
 	}
 
@@ -124,24 +124,24 @@ func (t *TLDR) UpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
 		return
 	}
 
-	updateRequest := database.UpdateTLDRTitleParams{
-		UserID: userId,
-		ID:     tldrId,
-	}
+	var updateRequest database.UpdateTLDRTitleParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	updateRequest.UserID = userId
+	updateRequest.ID = tldrId
 
 	tldr, err := t.Queries.UpdateTLDRTitle(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -197,13 +197,13 @@ func (t *TLDR) DeleteTLDR(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
 		return
 	}
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
 		return
 	}
 
