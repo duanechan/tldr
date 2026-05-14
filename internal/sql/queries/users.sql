@@ -3,6 +3,9 @@ INSERT INTO users (id, username, password)
 VALUES (?, ?, ?)
 RETURNING *;
 
+-- name: GetUsers :many
+SELECT * FROM users;
+
 -- name: GetUserById :one
 SELECT id, username, created_at, updated_at
 FROM users

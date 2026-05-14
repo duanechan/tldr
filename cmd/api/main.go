@@ -41,6 +41,8 @@ func main() {
 	api.Handle("PATCH /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
 	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.DeleteTLDR)))
 
+	api.Handle("GET /v1/users", app.AuthMiddleware(http.HandlerFunc(app.GetUsers)))
+	api.Handle("GET /v1/users/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetUser)))
 	api.Handle("GET /v1/users/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
