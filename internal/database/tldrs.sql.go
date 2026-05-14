@@ -59,6 +59,16 @@ func (q *Queries) DeleteTLDR(ctx context.Context, arg DeleteTLDRParams) error {
 	return err
 }
 
+const deleteTLDRById = `-- name: DeleteTLDRById :exec
+DELETE FROM tldrs
+WHERE id = ?
+`
+
+func (q *Queries) DeleteTLDRById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteTLDRById, id)
+	return err
+}
+
 const getAllTLDRs = `-- name: GetAllTLDRs :many
 SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
 `

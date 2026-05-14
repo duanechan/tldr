@@ -30,3 +30,7 @@ RETURNING *;
 DELETE FROM tldrs
 WHERE user_id = ?
     AND id = ?;
+
+-- name: DeleteTLDRById :exec
+DELETE FROM tldrs
+WHERE id = ?;

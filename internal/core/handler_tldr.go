@@ -218,3 +218,19 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
 }
+
+func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
+	tldrId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
+		return
+	}
+
+	if err = t.Queries.DeleteTLDRById(r.Context(), tldrId); err != nil {
+		t.Logger.Error("Failed to delete TLDR", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to delete TLDR")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusNoContent, nil)
+}

@@ -48,9 +48,7 @@ func main() {
 	admin.Handle("GET /tldrs", http.HandlerFunc(app.AdminGetTLDRs))
 	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.AdminGetTLDR))
 	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.AdminUpdateTLDR))
-	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	}))
+	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(app.AdminDeleteTLDR))
 
 	admin.Handle("GET /users", http.HandlerFunc(app.GetUsers))
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.GetUser))
