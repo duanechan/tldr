@@ -41,9 +41,7 @@ func main() {
 	api.Handle("PATCH /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UpdateTLDR)))
 	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.DeleteTLDR)))
 
-	api.Handle("GET /v1/users", app.AuthMiddleware(http.HandlerFunc(app.GetUsers)))
-	api.Handle("GET /v1/users/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetUser)))
-	api.Handle("GET /v1/users/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
+	api.Handle("GET /v1/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
 
 	admin := http.NewServeMux()
 	admin.Handle("GET /tldrs", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -59,12 +57,8 @@ func main() {
 		w.WriteHeader(http.StatusNotImplemented)
 	}))
 
-	admin.Handle("GET /users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	}))
-	admin.Handle("GET /users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	}))
+	admin.Handle("GET /users", http.HandlerFunc(app.GetUsers))
+	admin.Handle("GET /users/{id}", http.HandlerFunc(app.GetUser))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/admin/", http.StripPrefix("/admin", app.AuthMiddleware(app.AdminMiddleware(admin))))

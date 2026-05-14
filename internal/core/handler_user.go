@@ -58,8 +58,7 @@ func (t *TLDR) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = t.Queries.IsAdmin(r.Context(), userId)
-	if err != nil && userId != requestedUserId {
+	if userId != requestedUserId {
 		t.errorResponse(w, r.Context(), http.StatusForbidden, "You are not allowed to access or perform any actions to this resource")
 		return
 	}
@@ -80,25 +79,7 @@ func (t *TLDR) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) GetUsers(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
-
-	userId, err := uuid.Parse(claims.Subject)
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
-		return
-	}
-
-	_, err = t.Queries.IsAdmin(r.Context(), userId)
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusForbidden, "You are not allowed to access or perform any actions to this resource")
-		return
-	}
-
-	users, err := t.Queries.AdminGetUsers(r.Context())
+	users, err := t.Queries.GetUsers(r.Context())
 	if errors.Is(err, sql.ErrNoRows) {
 		t.jsonResponse(w, http.StatusOK, []database.User{})
 		return
