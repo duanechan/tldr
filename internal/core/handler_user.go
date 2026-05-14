@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) GetMe(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
@@ -20,7 +20,7 @@ func (t *TLDR) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
 		return
 	}
 
@@ -39,33 +39,16 @@ func (t *TLDR) GetMe(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) GetUser(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
-
-	requestedUserId, err := uuid.Parse(r.PathValue("id"))
+func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
 		return
 	}
 
-	userId, err := uuid.Parse(claims.Subject)
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
-		return
-	}
-
-	if userId != requestedUserId {
-		t.errorResponse(w, r.Context(), http.StatusForbidden, "You are not allowed to access or perform any actions to this resource")
-		return
-	}
-
-	user, err := t.Queries.GetUserById(r.Context(), requestedUserId)
+	user, err := t.Queries.GetUserById(r.Context(), userId)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("User with ID: %s not found", requestedUserId))
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("User with ID: %s not found", userId))
 		return
 	}
 
@@ -78,7 +61,7 @@ func (t *TLDR) GetUser(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := t.Queries.GetUsers(r.Context())
 	if errors.Is(err, sql.ErrNoRows) {
 		t.jsonResponse(w, http.StatusOK, []database.User{})
