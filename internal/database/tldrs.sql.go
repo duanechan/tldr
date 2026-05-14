@@ -209,3 +209,29 @@ func (q *Queries) UpdateTLDRTitle(ctx context.Context, arg UpdateTLDRTitleParams
 	)
 	return i, err
 }
+
+const updateTLDRTitleById = `-- name: UpdateTLDRTitleById :one
+UPDATE tldrs
+SET title = ?
+WHERE id = ?
+RETURNING id, created_at, updated_at, title, content, user_id
+`
+
+type UpdateTLDRTitleByIdParams struct {
+	Title string    `json:"title"`
+	ID    uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateTLDRTitleById(ctx context.Context, arg UpdateTLDRTitleByIdParams) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, updateTLDRTitleById, arg.Title, arg.ID)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
+}

@@ -159,7 +159,7 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
-	var updateRequest database.UpdateTLDRTitleParams
+	var updateRequest database.UpdateTLDRTitleByIdParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
@@ -173,7 +173,7 @@ func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	updateRequest.ID = tldrId
 
-	tldr, err := t.Queries.UpdateTLDRTitle(r.Context(), updateRequest)
+	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
 		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId))
 		return

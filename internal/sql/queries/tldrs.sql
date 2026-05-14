@@ -26,6 +26,12 @@ WHERE user_id = ?
     AND id = ?
 RETURNING *;
 
+-- name: UpdateTLDRTitleById :one
+UPDATE tldrs
+SET title = ?
+WHERE id = ?
+RETURNING *;
+
 -- name: DeleteTLDR :exec
 DELETE FROM tldrs
 WHERE user_id = ?
