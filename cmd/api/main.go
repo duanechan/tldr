@@ -45,7 +45,29 @@ func main() {
 	api.Handle("GET /v1/users/{id}", app.AuthMiddleware(http.HandlerFunc(app.GetUser)))
 	api.Handle("GET /v1/users/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
 
+	admin := http.NewServeMux()
+	admin.Handle("GET /tldrs", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+
+	admin.Handle("GET /users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+	admin.Handle("GET /users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotImplemented)
+	}))
+
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
+	app.Handle("/admin/", http.StripPrefix("/admin", app.AuthMiddleware(app.AdminMiddleware(admin))))
 	app.Handle("/api/", http.StripPrefix("/api", api))
 	app.HandleFunc("GET /health", app.Health)
 
