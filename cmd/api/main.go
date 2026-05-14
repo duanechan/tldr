@@ -31,7 +31,8 @@ func main() {
 	api := http.NewServeMux()
 	api.Handle("POST /v1/auth/register", app.RateLimiterMiddleware(http.HandlerFunc(app.Register)))
 	api.Handle("POST /v1/auth/login", app.RateLimiterMiddleware(http.HandlerFunc(app.Login)))
-	api.Handle("POST /v1/auth/refresh", app.RateLimiterMiddleware(http.HandlerFunc(app.Refresh)))
+	api.Handle("POST /v1/auth/refresh", http.HandlerFunc(app.Refresh))
+	api.Handle("POST /v1/auth/logout", http.HandlerFunc(app.Logout))
 
 	api.Handle("POST /v1/summarize/file", app.AuthMiddleware(http.HandlerFunc(app.SummarizeFile)))
 	api.Handle("POST /v1/summarize/text", app.AuthMiddleware(http.HandlerFunc(app.SummarizeText)))
