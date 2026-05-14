@@ -2,9 +2,7 @@ package core
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
@@ -120,22 +118,4 @@ func (t *TLDR) insertTLDR(ctx context.Context, subject, content string) (*databa
 	}
 
 	return &tldr, nil
-}
-
-func (t *TLDR) getTLDRAsAdmin(ctx context.Context, userId, tldrId uuid.UUID) (database.Tldr, error) {
-	tldr, err := t.Queries.GetTLDRById(ctx, tldrId)
-	if err != nil {
-		return database.Tldr{}, err
-	}
-
-	_, err = t.Queries.IsAdmin(ctx, userId)
-	if errors.Is(err, sql.ErrNoRows) {
-		return database.Tldr{}, ErrNotAdmin
-	}
-
-	if err != nil {
-		return database.Tldr{}, err
-	}
-
-	return tldr, nil
 }
