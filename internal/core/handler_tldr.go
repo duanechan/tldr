@@ -63,6 +63,49 @@ func (t *TLDR) GetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tldrs, err := t.Queries.GetTLDRsFromUser(r.Context(), userId)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
+		return
+	}
+
+	if err != nil {
+		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, tldrs)
+}
+
+func (t *TLDR) GetTLDRById(w http.ResponseWriter, r *http.Request) {
+	tldrId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	tldr, err := t.Queries.GetTLDRById(r.Context(), tldrId)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()))
+		return
+	}
+
+	if err != nil {
+		t.Logger.Error("Failed to get TLDR", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDR")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, tldr)
+}
+
+func (t *TLDR) GetAllTLDRs(w http.ResponseWriter, r *http.Request) {
+	tldrs, err := t.Queries.GetAllTLDRs(r.Context())
+	if errors.Is(err, sql.ErrNoRows) {
+		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
+		return
+	}
+
 	if err != nil {
 		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")

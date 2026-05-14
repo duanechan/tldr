@@ -44,12 +44,8 @@ func main() {
 	api.Handle("GET /v1/me", app.AuthMiddleware(http.HandlerFunc(app.GetMe)))
 
 	admin := http.NewServeMux()
-	admin.Handle("GET /tldrs", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	}))
-	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	}))
+	admin.Handle("GET /tldrs", http.HandlerFunc(app.GetAllTLDRs))
+	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.GetTLDRById))
 	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
 	}))
