@@ -12,6 +12,10 @@ SELECT * FROM tldrs
 WHERE user_id = ?
     AND id = ?;
 
+-- name: AdminGetTLDRById :one
+SELECT * FROM tldrs
+WHERE id = ?;
+
 -- name: UpdateTLDRTitleById :one
 UPDATE tldrs
 SET title = ?

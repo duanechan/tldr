@@ -11,6 +11,25 @@ import (
 	"github.com/google/uuid"
 )
 
+const adminGetTLDRById = `-- name: AdminGetTLDRById :one
+SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+WHERE id = ?
+`
+
+func (q *Queries) AdminGetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
+	row := q.db.QueryRowContext(ctx, adminGetTLDRById, id)
+	var i Tldr
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const createTLDR = `-- name: CreateTLDR :one
 INSERT INTO tldrs (id, title, content, user_id)
 VALUES (?, ?, ?, ?)
