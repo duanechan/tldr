@@ -27,19 +27,7 @@ func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.Queries.GetUserById(r.Context(), userId)
-	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid session")
-		return
-	}
-
-	if err != nil {
-		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
-		return
-	}
-
-	t.jsonResponse(w, http.StatusOK, user)
+	t.getUser(w, r, userId)
 }
 
 func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
@@ -81,19 +69,7 @@ func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.Queries.GetUserById(r.Context(), userId)
-	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("User with ID: %s not found", userId))
-		return
-	}
-
-	if err != nil {
-		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
-		return
-	}
-
-	t.jsonResponse(w, http.StatusOK, user)
+	t.getUser(w, r, userId)
 }
 
 func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +106,22 @@ func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.updatePassword(w, r, userId)
+}
+
+func (t *TLDR) getUser(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
+	user, err := t.Queries.GetUserById(r.Context(), userId)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
+		return
+	}
+
+	if err != nil {
+		t.Logger.Error("Failed to get user", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, user)
 }
 
 func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
