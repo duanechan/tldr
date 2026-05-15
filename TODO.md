@@ -4,11 +4,11 @@
 
 - [ ] Admin routes
   - [x] PATCH /users/{id} <!--Username-->
-  - [ ] PATCH /users/{id}/reset-password
+  - [x] PATCH /users/{id}/reset-password
   - [ ] DELETE /users/{id}
-- [ ] User routes
+- [x] User routes
   - [x] PATCH /change-username <!--Username-->
-  - [ ] PATCH /reset-password
+  - [x] PATCH /reset-password
 - [ ] Initial admin seed script
 - [ ] Admin deletion
 - [ ] Pagination
