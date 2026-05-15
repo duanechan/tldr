@@ -27,10 +27,7 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		requestId, ok := r.Context().Value(requestIdKey).(string)
-		if !ok {
-			requestId = "NOID"
-		}
+		requestId, _ := r.Context().Value(requestIdKey).(string)
 
 		ctx := context.WithValue(r.Context(), claimsKey, claims)
 		t.Logger.Info("Authenticated Request:", "id", requestId, "user_id", userId)
