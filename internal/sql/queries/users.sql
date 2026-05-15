@@ -22,3 +22,15 @@ INNER JOIN refresh_tokens ON users.id = refresh_tokens.user_id
 WHERE refresh_tokens.token = ?
     AND refresh_tokens.expires_at > CURRENT_TIMESTAMP
     AND refresh_tokens.revoked_at IS NULL;
+
+-- name: UpdateUsername :one
+UPDATE users
+SET username = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: UpdatePassword :one
+UPDATE users
+SET password = ?
+WHERE id = ?
+RETURNING *;

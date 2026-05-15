@@ -2,8 +2,12 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/duanechan/tldr/internal/auth"
@@ -118,4 +122,43 @@ func (t *TLDR) insertTLDR(ctx context.Context, subject, content string) (*databa
 	}
 
 	return &tldr, nil
+}
+
+func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
+	var updateRequest database.UpdateUsernameParams
+	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	updateRequest.ID = userId
+
+	var fieldError *FieldError
+	cleanedUsername := strings.TrimSpace(updateRequest.Username)
+	if cleanedUsername == "" {
+		fieldError = &FieldError{Field: "username", Message: "Username is required"}
+	} else if len(cleanedUsername) < minimumUsernameLength {
+		fieldError = &FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)}
+	}
+
+	if fieldError != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to update username", *fieldError)
+		return
+	}
+
+	updateRequest.Username = cleanedUsername
+
+	user, err := t.Queries.UpdateUsername(r.Context(), updateRequest)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update user")
+		return
+	}
+
+	if err != nil {
+		t.Logger.Error("Failed to update user", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update user")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, user)
 }

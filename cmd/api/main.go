@@ -52,10 +52,12 @@ func main() {
 
 	admin.Handle("GET /users", http.HandlerFunc(app.AdminGetUsers))
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))
+	admin.Handle("PATCH /users/{id}", http.HandlerFunc(app.AdminUpdateUsername))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/admin/", http.StripPrefix("/admin", app.AuthMiddleware(app.AdminMiddleware(admin))))
 	app.Handle("/api/", http.StripPrefix("/api", api))
+	app.Handle("PATCH /change-username", app.AuthMiddleware(http.HandlerFunc(app.UserUpdateUsername)))
 	app.HandleFunc("GET /health", app.Health)
 
 	server := &http.Server{
