@@ -108,6 +108,22 @@ func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	t.updatePassword(w, r, userId)
 }
 
+func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		return
+	}
+
+	if err = t.Queries.DeleteUser(r.Context(), userId); err != nil {
+		t.Logger.Error("Failed to delete user", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to delete user")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusNoContent, nil)
+}
+
 func (t *TLDR) getUser(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
 	user, err := t.Queries.GetUserById(r.Context(), userId)
 	if errors.Is(err, sql.ErrNoRows) {

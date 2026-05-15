@@ -34,3 +34,7 @@ UPDATE users
 SET password = ?
 WHERE id = ?
 RETURNING *;
+
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = ?;

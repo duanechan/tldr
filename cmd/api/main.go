@@ -54,6 +54,7 @@ func main() {
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))
 	admin.Handle("PATCH /users/{id}", http.HandlerFunc(app.AdminUpdateUsername))
 	admin.Handle("PATCH /users/{id}/reset-password", http.HandlerFunc(app.AdminUpdatePassword))
+	admin.Handle("DELETE /users/{id}", http.HandlerFunc(app.AdminDeleteUser))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/admin/", http.StripPrefix("/admin", app.AuthMiddleware(app.AdminMiddleware(admin))))

@@ -2,10 +2,10 @@
 
 ## **Backend**
 
-- [ ] Admin routes
+- [x] Admin routes
   - [x] PATCH /users/{id} <!--Username-->
   - [x] PATCH /users/{id}/reset-password
-  - [ ] DELETE /users/{id}
+  - [x] DELETE /users/{id}
 - [x] User routes
   - [x] PATCH /change-username <!--Username-->
   - [x] PATCH /reset-password
