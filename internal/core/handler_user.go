@@ -55,6 +55,22 @@ func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	t.updateUsername(w, r, userId)
 }
 
+func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	if !ok {
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		return
+	}
+
+	t.updatePassword(w, r, userId)
+}
+
 func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -101,4 +117,14 @@ func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.updateUsername(w, r, userId)
+}
+
+func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		return
+	}
+
+	t.updatePassword(w, r, userId)
 }
