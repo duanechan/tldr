@@ -12,6 +12,8 @@
 - [ ] Initial admin seed script
 - [ ] Admin deletion
 - [ ] Pagination
+  - [ ] TLDRs
+  - [ ] Users (Admin)
 - [ ] AI-generated titles in TLDR create flow
 - [ ] Flag for sensitive TLDRs
 - [ ] Documentation

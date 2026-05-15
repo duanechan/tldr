@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -69,40 +70,6 @@ func (q *Queries) DeleteTLDRById(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getAllTLDRs = `-- name: GetAllTLDRs :many
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-`
-
-func (q *Queries) GetAllTLDRs(ctx context.Context) ([]Tldr, error) {
-	rows, err := q.db.QueryContext(ctx, getAllTLDRs)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Tldr
-	for rows.Next() {
-		var i Tldr
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Title,
-			&i.Content,
-			&i.UserID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getTLDRByIDAndUser = `-- name: GetTLDRByIDAndUser :one
 SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
 WHERE user_id = ?
@@ -147,27 +114,88 @@ func (q *Queries) GetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
 	return i, err
 }
 
-const getTLDRsByUser = `-- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
-WHERE user_id = ?
+const getTLDRs = `-- name: GetTLDRs :many
+SELECT id, created_at, updated_at, title FROM tldrs
+WHERE created_at < ?
+ORDER BY created_at DESC
+LIMIT ?
 `
 
-func (q *Queries) GetTLDRsByUser(ctx context.Context, userID uuid.UUID) ([]Tldr, error) {
-	rows, err := q.db.QueryContext(ctx, getTLDRsByUser, userID)
+type GetTLDRsParams struct {
+	CreatedAt time.Time `json:"created_at"`
+	Limit     int64     `json:"limit"`
+}
+
+type GetTLDRsRow struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Title     string    `json:"title"`
+}
+
+func (q *Queries) GetTLDRs(ctx context.Context, arg GetTLDRsParams) ([]GetTLDRsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTLDRs, arg.CreatedAt, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Tldr
+	var items []GetTLDRsRow
 	for rows.Next() {
-		var i Tldr
+		var i GetTLDRsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Title,
-			&i.Content,
-			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTLDRsByUser = `-- name: GetTLDRsByUser :many
+SELECT id, created_at, updated_at, title FROM tldrs
+WHERE user_id = ?
+    AND created_at < ?
+ORDER BY created_at DESC
+LIMIT ?
+`
+
+type GetTLDRsByUserParams struct {
+	UserID    uuid.UUID `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Limit     int64     `json:"limit"`
+}
+
+type GetTLDRsByUserRow struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Title     string    `json:"title"`
+}
+
+func (q *Queries) GetTLDRsByUser(ctx context.Context, arg GetTLDRsByUserParams) ([]GetTLDRsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTLDRsByUser, arg.UserID, arg.CreatedAt, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTLDRsByUserRow
+	for rows.Next() {
+		var i GetTLDRsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
 		); err != nil {
 			return nil, err
 		}

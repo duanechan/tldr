@@ -6,6 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/golang-jwt/jwt/v5"
@@ -62,9 +66,19 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), userId)
-	if errors.Is(err, sql.ErrNoRows) {
-		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
+	cursor, limit, err := extractQueryParams(r.URL.Query())
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params")
+		return
+	}
+
+	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), database.GetTLDRsByUserParams{
+		UserID:    userId,
+		CreatedAt: time.Time(cursor),
+		Limit:     int64(limit),
+	})
+	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{Results: []database.GetTLDRsByUserRow{}})
 		return
 	}
 
@@ -74,7 +88,16 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldrs)
+	if int(limit) > len(tldrs) {
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{Results: tldrs})
+		return
+	}
+
+	next := tldrs[limit-1]
+	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{
+		Results: tldrs[:limit-1],
+		Next:    (*PageCursor)(&next.CreatedAt),
+	})
 }
 
 func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
@@ -100,9 +123,18 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
-	tldrs, err := t.Queries.GetAllTLDRs(r.Context())
-	if errors.Is(err, sql.ErrNoRows) {
-		t.jsonResponse(w, http.StatusOK, []database.Tldr{})
+	cursor, limit, err := extractQueryParams(r.URL.Query())
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params")
+		return
+	}
+
+	tldrs, err := t.Queries.GetTLDRs(r.Context(), database.GetTLDRsParams{
+		CreatedAt: time.Time(cursor),
+		Limit:     int64(limit),
+	})
+	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: []database.GetTLDRsRow{}})
 		return
 	}
 
@@ -112,7 +144,16 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldrs)
+	if int(limit) > len(tldrs) {
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: tldrs})
+		return
+	}
+
+	next := tldrs[limit-1]
+	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{
+		Results: tldrs[:limit-1],
+		Next:    (*PageCursor)(&next.CreatedAt),
+	})
 }
 
 func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
@@ -233,4 +274,29 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func extractQueryParams(query url.Values) (PageCursor, PageLimit, error) {
+	cursorQuery := strings.TrimSpace(query.Get("cursor"))
+	if cursorQuery == "" {
+		cursorQuery = NoCursor
+	}
+
+	cursor, err := time.Parse(time.RFC3339, cursorQuery)
+	if err != nil {
+		return PageCursor{}, 0, err
+	}
+
+	limitQuery := strings.TrimSpace(query.Get("limit"))
+	if limitQuery == "" {
+		limitQuery = defaultPageLimit
+	}
+
+	limit, err := strconv.Atoi(limitQuery)
+	if err != nil {
+		return PageCursor{}, 0, err
+	}
+	limit += 1
+
+	return PageCursor(cursor), PageLimit(limit), nil
 }
