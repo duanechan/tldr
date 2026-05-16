@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"slices"
@@ -63,6 +64,19 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		contents,
 		t.Model,
 	)
+	if err, exists := errors.AsType[genai.APIError](err); exists {
+		switch err.Code {
+		case http.StatusTooManyRequests:
+			t.errorResponse(w, r.Context(), http.StatusTooManyRequests, "Too many requests, try again later")
+		case http.StatusRequestEntityTooLarge:
+			t.errorResponse(w, r.Context(), http.StatusRequestEntityTooLarge, "File is too large")
+		default:
+			t.Logger.Error("Failed to summarize text", "error", err.Error())
+			t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		}
+		return
+	}
+
 	if err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
@@ -111,6 +125,19 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		genai.Text(cleanedText),
 		t.Model,
 	)
+	if err, exists := errors.AsType[genai.APIError](err); exists {
+		switch err.Code {
+		case http.StatusTooManyRequests:
+			t.errorResponse(w, r.Context(), http.StatusTooManyRequests, "Too many requests, try again later")
+		case http.StatusRequestEntityTooLarge:
+			t.errorResponse(w, r.Context(), http.StatusRequestEntityTooLarge, "File is too large")
+		default:
+			t.Logger.Error("Failed to summarize text", "error", err.Error())
+			t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		}
+		return
+	}
+
 	if err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
