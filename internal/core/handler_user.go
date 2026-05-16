@@ -12,7 +12,6 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/duanechan/tldr/internal/types"
 	"github.com/google/uuid"
 )
 
@@ -79,14 +78,14 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) > len(users) {
-		t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{Results: users})
+		t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{Results: users})
 		return
 	}
 
 	next := users[limit-1]
-	t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{
+	t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
 		Results: users[:limit-1],
-		Next:    (*types.PageCursor)(&next.CreatedAt),
+		Next:    (*PageCursor)(&next.CreatedAt),
 	})
 }
 
@@ -151,12 +150,12 @@ func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uui
 
 	updateRequest.ID = userId
 
-	var fieldError *types.FieldError
+	var fieldError *FieldError
 	cleanedUsername := strings.TrimSpace(updateRequest.Username)
 	if cleanedUsername == "" {
-		fieldError = &types.FieldError{Field: "username", Message: "Username is required"}
-	} else if len(cleanedUsername) < types.MinimumUsernameLength {
-		fieldError = &types.FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", types.MinimumUsernameLength)}
+		fieldError = &FieldError{Field: "username", Message: "Username is required"}
+	} else if len(cleanedUsername) < minimumUsernameLength {
+		fieldError = &FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)}
 	}
 
 	if fieldError != nil {
@@ -190,11 +189,11 @@ func (t *TLDR) updatePassword(w http.ResponseWriter, r *http.Request, userId uui
 
 	updateRequest.ID = userId
 
-	var fieldError *types.FieldError
+	var fieldError *FieldError
 	if strings.TrimSpace(updateRequest.Password) == "" {
-		fieldError = &types.FieldError{Field: "password", Message: "Password is required"}
-	} else if len(updateRequest.Password) < types.MinimumPasswordLength {
-		fieldError = &types.FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", types.MinimumPasswordLength)}
+		fieldError = &FieldError{Field: "password", Message: "Password is required"}
+	} else if len(updateRequest.Password) < minimumPasswordLength {
+		fieldError = &FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)}
 	}
 
 	if fieldError != nil {

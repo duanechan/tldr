@@ -11,7 +11,6 @@ import (
 
 	"github.com/duanechan/tldr/internal/config"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/duanechan/tldr/internal/types"
 	"github.com/lmittmann/tint"
 	"golang.org/x/time/rate"
 	"google.golang.org/genai"
@@ -31,6 +30,21 @@ type TLDR struct {
 	clients   map[string]*rate.Limiter
 }
 
+const prompt = `
+You are a document summarizer.
+Summarize the documents, text files, raw text, or images that are provided to you.
+Extract its keypoints, if necessary, and ensure the user understands what the contents are.
+Keep the content brief and simple (250-500 words).
+Don't make the title too verbose.
+Do not ask for more input.
+No markdown.
+ONLY RETURN a response in this JSON format:
+{
+	"title": string,
+	"content": string
+}
+`
+
 func New() (*TLDR, error) {
 	cfg, err := config.New()
 	if err != nil {
@@ -43,7 +57,7 @@ func New() (*TLDR, error) {
 	}
 
 	model := &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(types.Prompt, genai.RoleModel),
+		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
 		ResponseMIMEType:  "application/json",
 		ResponseJsonSchema: map[string]any{
 			"type":     "object",

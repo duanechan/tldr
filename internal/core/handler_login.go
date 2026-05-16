@@ -9,11 +9,10 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
-	"github.com/duanechan/tldr/internal/types"
 )
 
 func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
-	var req types.LoginRequest
+	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
@@ -62,5 +61,5 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.setRefreshTokenCookie(w, *refreshToken)
-	t.jsonResponse(w, http.StatusOK, types.AuthResponse{AccessToken: accessToken})
+	t.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
 }

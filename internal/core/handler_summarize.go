@@ -12,21 +12,31 @@ import (
 
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/duanechan/tldr/internal/types"
 	"github.com/google/uuid"
 	"google.golang.org/genai"
 )
 
+var allowedFileTypes []string = []string{
+	"application/pdf",
+	"image/png",
+	"image/jpeg",
+	"image/gif",
+	"text/plain",
+}
+
+const (
+	maxUploadMemory int64 = 10 << 20
+)
+
 func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
-	if err := r.ParseMultipartForm(types.MaxUploadMemory); err != nil {
+	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid or missing multipart form data")
 		return
 	}
@@ -39,7 +49,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	mimeType := header.Header.Get("Content-Type")
-	if !slices.Contains(types.AllowedFileTypes, mimeType) {
+	if !slices.Contains(allowedFileTypes, mimeType) {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "File type not supported")
 		return
 	}
@@ -82,7 +92,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response types.SummarizeResponse
+	var response SummarizeResponse
 	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
@@ -100,14 +110,13 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
-	var req types.SummarizeTextRequest
+	var req SummarizeTextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
@@ -143,7 +152,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response types.SummarizeResponse
+	var response SummarizeResponse
 	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
@@ -159,7 +168,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, response)
 }
 
-func (t *TLDR) insertTLDR(ctx context.Context, userId uuid.UUID, response types.SummarizeResponse) error {
+func (t *TLDR) insertTLDR(ctx context.Context, userId uuid.UUID, response SummarizeResponse) error {
 	tldrId, err := uuid.NewRandom()
 	if err != nil {
 		return err

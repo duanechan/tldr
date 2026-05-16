@@ -13,7 +13,6 @@ import (
 
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/duanechan/tldr/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -68,7 +67,7 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		Limit:     int64(limit),
 	})
 	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
-		t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsByUserRow]{Results: []database.GetTLDRsByUserRow{}})
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{Results: []database.GetTLDRsByUserRow{}})
 		return
 	}
 
@@ -79,14 +78,14 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) > len(tldrs) {
-		t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsByUserRow]{Results: tldrs})
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{Results: tldrs})
 		return
 	}
 
 	next := tldrs[limit-1]
-	t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsByUserRow]{
+	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{
 		Results: tldrs[:limit-1],
-		Next:    (*types.PageCursor)(&next.CreatedAt),
+		Next:    (*PageCursor)(&next.CreatedAt),
 	})
 }
 
@@ -124,7 +123,7 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		Limit:     int64(limit),
 	})
 	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
-		t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{Results: []database.GetTLDRsRow{}})
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: []database.GetTLDRsRow{}})
 		return
 	}
 
@@ -135,19 +134,19 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) > len(tldrs) {
-		t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{Results: tldrs})
+		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: tldrs})
 		return
 	}
 
 	next := tldrs[limit-1]
-	t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{
+	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{
 		Results: tldrs[:limit-1],
-		Next:    (*types.PageCursor)(&next.CreatedAt),
+		Next:    (*PageCursor)(&next.CreatedAt),
 	})
 }
 
 func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(auth.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -190,7 +189,7 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(auth.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -266,31 +265,31 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func extractQueryParams(query url.Values) (types.PageCursor, types.PageLimit, []types.FieldError) {
-	var fieldErrors []types.FieldError
+func extractQueryParams(query url.Values) (PageCursor, PageLimit, []FieldError) {
+	var fieldErrors []FieldError
 	cursorQuery := strings.TrimSpace(query.Get("cursor"))
 	if cursorQuery == "" {
-		cursorQuery = types.DefaultPageCursor
+		cursorQuery = NoCursor
 	}
 
 	cursor, err := time.Parse(time.RFC3339, cursorQuery)
 	if err != nil {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "cursor", Message: "Invalid cursor format"})
+		fieldErrors = append(fieldErrors, FieldError{Field: "cursor", Message: "Invalid cursor format"})
 	}
 
 	limitQuery := strings.TrimSpace(query.Get("limit"))
 	if limitQuery == "" {
-		limitQuery = types.DefaultPageLimit
+		limitQuery = defaultPageLimit
 	}
 
 	limit, err := strconv.Atoi(limitQuery)
 	if err != nil {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "limit", Message: "Invalid limit format"})
+		fieldErrors = append(fieldErrors, FieldError{Field: "limit", Message: "Invalid limit format"})
 	}
 
 	if len(fieldErrors) > 0 {
-		return types.PageCursor{}, 0, fieldErrors
+		return PageCursor{}, 0, fieldErrors
 	}
 
-	return types.PageCursor(cursor), types.PageLimit(limit + 1), nil
+	return PageCursor(cursor), PageLimit(limit + 1), nil
 }

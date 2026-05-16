@@ -11,14 +11,18 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/duanechan/tldr/internal/types"
 	"github.com/google/uuid"
 	"modernc.org/sqlite"
 )
 
+const (
+	minimumUsernameLength = 3
+	minimumPasswordLength = 8
+)
+
 func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
-	var req types.RegisterRequest
-	fieldErrors := []types.FieldError{}
+	var req registerRequest
+	fieldErrors := []FieldError{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
@@ -26,17 +30,17 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 
 	cleanedUsername := strings.TrimSpace(req.Username)
 	if cleanedUsername == "" {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "username", Message: "Username is required"})
-	} else if len(cleanedUsername) < types.MinimumUsernameLength {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", types.MinimumUsernameLength)})
+		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: "Username is required"})
+	} else if len(cleanedUsername) < minimumUsernameLength {
+		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)})
 	}
 
 	if strings.TrimSpace(req.Password) == "" {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "password", Message: "Password is required"})
-	} else if len(req.Password) < types.MinimumPasswordLength {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", types.MinimumPasswordLength)})
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Password is required"})
+	} else if len(req.Password) < minimumPasswordLength {
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)})
 	} else if req.Password != req.ConfirmPassword {
-		fieldErrors = append(fieldErrors, types.FieldError{Field: "password", Message: "Passwords do not match"})
+		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Passwords do not match"})
 	}
 
 	if len(fieldErrors) > 0 {
@@ -61,7 +65,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		Username: cleanedUsername,
 		Password: hashedPassword,
 	})
-	if sqliteErr, ok := err.(*sqlite.Error); ok && sqliteErr.Code() == types.UniqueConstraintCode {
+	if sqliteErr, ok := err.(*sqlite.Error); ok && sqliteErr.Code() == sqliteUniqueConstraint {
 		t.errorResponse(w, r.Context(), http.StatusConflict, "Username already taken")
 		return
 	}
@@ -86,7 +90,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.setRefreshTokenCookie(w, *refreshToken)
-	t.jsonResponse(w, http.StatusCreated, types.AuthResponse{AccessToken: accessToken})
+	t.jsonResponse(w, http.StatusCreated, authResponse{AccessToken: accessToken})
 }
 
 func (t *TLDR) insertRefreshToken(ctx context.Context, id uuid.UUID) (*database.RefreshToken, error) {
