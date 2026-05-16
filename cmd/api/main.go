@@ -43,6 +43,8 @@ func main() {
 	api.Handle("DELETE /v1/tldrs/{id}", app.AuthMiddleware(http.HandlerFunc(app.UserDeleteTLDR)))
 
 	api.Handle("GET /v1/me", app.AuthMiddleware(http.HandlerFunc(app.UserGetMe)))
+	app.Handle("PATCH /v1/me/change-username", app.AuthMiddleware(http.HandlerFunc(app.UserUpdateUsername)))
+	app.Handle("PATCH /v1/me/reset-password", app.AuthMiddleware(http.HandlerFunc(app.UserUpdatePassword)))
 
 	admin := http.NewServeMux()
 	admin.Handle("GET /tldrs", http.HandlerFunc(app.AdminGetTLDRs))
@@ -59,8 +61,7 @@ func main() {
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle("/admin/", http.StripPrefix("/admin", app.AuthMiddleware(app.AdminMiddleware(admin))))
 	app.Handle("/api/", http.StripPrefix("/api", api))
-	app.Handle("PATCH /change-username", app.AuthMiddleware(http.HandlerFunc(app.UserUpdateUsername)))
-	app.Handle("PATCH /reset-password", app.AuthMiddleware(http.HandlerFunc(app.UserUpdatePassword)))
+
 	app.HandleFunc("GET /health", app.Health)
 
 	server := &http.Server{
