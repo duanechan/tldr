@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/database"
@@ -73,8 +74,17 @@ func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := t.Queries.GetUsers(r.Context())
-	if errors.Is(err, sql.ErrNoRows) {
+	cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	if fieldErrors != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
+		return
+	}
+
+	users, err := t.Queries.GetUsers(r.Context(), database.GetUsersParams{
+		CreatedAt: time.Time(cursor),
+		Limit:     int64(limit),
+	})
+	if errors.Is(err, sql.ErrNoRows) || users == nil {
 		t.jsonResponse(w, http.StatusOK, []database.User{})
 		return
 	}
@@ -85,7 +95,16 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, users)
+	if int(limit) > len(users) {
+		t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{Results: users})
+		return
+	}
+
+	next := users[limit-1]
+	t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
+		Results: users[:limit-1],
+		Next:    (*PageCursor)(&next.CreatedAt),
+	})
 }
 
 func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {

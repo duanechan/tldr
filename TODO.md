@@ -12,10 +12,14 @@
 - [ ] Initial admin seed script
 - [ ] Admin deletion
 - [ ] Pagination
-  - [ ] TLDRs
-  - [ ] Users (Admin)
+  - [x] TLDRs
+  - [x] Users (Admin)
+- [ ] Batch deletion of TLDRs
+  - [ ] Users
+  - [ ] Admin
 - [ ] AI-generated titles in TLDR create flow
 - [ ] Flag for sensitive TLDRs
+- [ ] Id + CreatedAt to encode PageCursor to Base64 string
 - [ ] Documentation
 - [ ] Testing
 

@@ -4,23 +4,27 @@ VALUES (?, ?, ?, ?)
 RETURNING *;
 
 -- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title FROM tldrs
+SELECT id, created_at, updated_at, title
+FROM tldrs
 WHERE user_id = ?
     AND created_at < ?
 ORDER BY created_at DESC
 LIMIT ?;
 
 -- name: GetTLDRByIDAndUser :one
-SELECT * FROM tldrs
+SELECT *
+FROM tldrs
 WHERE user_id = ?
     AND id = ?;
 
 -- name: GetTLDRById :one
-SELECT * FROM tldrs
+SELECT *
+FROM tldrs
 WHERE id = ?;
 
 -- name: GetTLDRs :many
-SELECT id, created_at, updated_at, title FROM tldrs
+SELECT id, created_at, updated_at, title
+FROM tldrs
 WHERE created_at < ?
 ORDER BY created_at DESC
 LIMIT ?;

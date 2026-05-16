@@ -66,9 +66,9 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, limit, err := extractQueryParams(r.URL.Query())
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params")
+	cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	if fieldErrors != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
 		return
 	}
 
@@ -123,9 +123,9 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
-	cursor, limit, err := extractQueryParams(r.URL.Query())
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params")
+	cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	if fieldErrors != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
 		return
 	}
 
@@ -276,7 +276,8 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func extractQueryParams(query url.Values) (PageCursor, PageLimit, error) {
+func extractQueryParams(query url.Values) (PageCursor, PageLimit, []FieldError) {
+	var fieldErrors []FieldError
 	cursorQuery := strings.TrimSpace(query.Get("cursor"))
 	if cursorQuery == "" {
 		cursorQuery = NoCursor
@@ -284,7 +285,7 @@ func extractQueryParams(query url.Values) (PageCursor, PageLimit, error) {
 
 	cursor, err := time.Parse(time.RFC3339, cursorQuery)
 	if err != nil {
-		return PageCursor{}, 0, err
+		fieldErrors = append(fieldErrors, FieldError{Field: "cursor", Message: "Invalid cursor format"})
 	}
 
 	limitQuery := strings.TrimSpace(query.Get("limit"))
@@ -294,9 +295,12 @@ func extractQueryParams(query url.Values) (PageCursor, PageLimit, error) {
 
 	limit, err := strconv.Atoi(limitQuery)
 	if err != nil {
-		return PageCursor{}, 0, err
+		fieldErrors = append(fieldErrors, FieldError{Field: "limit", Message: "Invalid limit format"})
 	}
-	limit += 1
 
-	return PageCursor(cursor), PageLimit(limit), nil
+	if len(fieldErrors) > 0 {
+		return PageCursor{}, 0, fieldErrors
+	}
+
+	return PageCursor(cursor), PageLimit(limit + 1), nil
 }

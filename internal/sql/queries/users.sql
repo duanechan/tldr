@@ -4,10 +4,14 @@ VALUES (?, ?, ?)
 RETURNING *;
 
 -- name: GetUsers :many
-SELECT * FROM users;
+SELECT id, created_at, updated_at, username
+FROM users
+WHERE created_at < ?
+ORDER BY created_at DESC
+LIMIT ?;
 
 -- name: GetUserById :one
-SELECT id, username, created_at, updated_at
+SELECT id, created_at, updated_at, username
 FROM users
 WHERE id = ?;
 
@@ -17,7 +21,8 @@ FROM users
 WHERE username = ?;
 
 -- name: GetUserByRefreshToken :one
-SELECT users.* FROM users
+SELECT users.*
+FROM users
 INNER JOIN refresh_tokens ON users.id = refresh_tokens.user_id
 WHERE refresh_tokens.token = ?
     AND refresh_tokens.expires_at > CURRENT_TIMESTAMP

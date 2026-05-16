@@ -48,16 +48,16 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, created_at, updated_at
+SELECT id, created_at, updated_at, username
 FROM users
 WHERE id = ?
 `
 
 type GetUserByIdRow struct {
 	ID        uuid.UUID `json:"id"`
-	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Username  string    `json:"username"`
 }
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (GetUserByIdRow, error) {
@@ -65,15 +65,16 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (GetUserByIdRow
 	var i GetUserByIdRow
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Username,
 	)
 	return i, err
 }
 
 const getUserByRefreshToken = `-- name: GetUserByRefreshToken :one
-SELECT users.id, users.created_at, users.updated_at, users.username, users.password FROM users
+SELECT users.id, users.created_at, users.updated_at, users.username, users.password
+FROM users
 INNER JOIN refresh_tokens ON users.id = refresh_tokens.user_id
 WHERE refresh_tokens.token = ?
     AND refresh_tokens.expires_at > CURRENT_TIMESTAMP
@@ -113,24 +114,39 @@ func (q *Queries) GetUserCredentialsByUsername(ctx context.Context, username str
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, username, password FROM users
+SELECT id, created_at, updated_at, username
+FROM users
+WHERE created_at < ?
+ORDER BY created_at DESC
+LIMIT ?
 `
 
-func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers)
+type GetUsersParams struct {
+	CreatedAt time.Time `json:"created_at"`
+	Limit     int64     `json:"limit"`
+}
+
+type GetUsersRow struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Username  string    `json:"username"`
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUsers, arg.CreatedAt, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []GetUsersRow
 	for rows.Next() {
-		var i User
+		var i GetUsersRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Username,
-			&i.Password,
 		); err != nil {
 			return nil, err
 		}

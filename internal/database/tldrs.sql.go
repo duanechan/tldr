@@ -71,7 +71,8 @@ func (q *Queries) DeleteTLDRById(ctx context.Context, id uuid.UUID) error {
 }
 
 const getTLDRByIDAndUser = `-- name: GetTLDRByIDAndUser :one
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+SELECT id, created_at, updated_at, title, content, user_id
+FROM tldrs
 WHERE user_id = ?
     AND id = ?
 `
@@ -96,7 +97,8 @@ func (q *Queries) GetTLDRByIDAndUser(ctx context.Context, arg GetTLDRByIDAndUser
 }
 
 const getTLDRById = `-- name: GetTLDRById :one
-SELECT id, created_at, updated_at, title, content, user_id FROM tldrs
+SELECT id, created_at, updated_at, title, content, user_id
+FROM tldrs
 WHERE id = ?
 `
 
@@ -115,7 +117,8 @@ func (q *Queries) GetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
 }
 
 const getTLDRs = `-- name: GetTLDRs :many
-SELECT id, created_at, updated_at, title FROM tldrs
+SELECT id, created_at, updated_at, title
+FROM tldrs
 WHERE created_at < ?
 ORDER BY created_at DESC
 LIMIT ?
@@ -162,7 +165,8 @@ func (q *Queries) GetTLDRs(ctx context.Context, arg GetTLDRsParams) ([]GetTLDRsR
 }
 
 const getTLDRsByUser = `-- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title FROM tldrs
+SELECT id, created_at, updated_at, title
+FROM tldrs
 WHERE user_id = ?
     AND created_at < ?
 ORDER BY created_at DESC
