@@ -34,8 +34,15 @@ const prompt = `
 You are a document summarizer.
 Summarize the documents, text files, raw text, or images that are provided to you.
 Extract its keypoints, if necessary, and ensure the user understands what the contents are.
-Keep it brief and simple (250-500 words).
+Keep the content brief and simple (250-500 words).
+Don't make the title too verbose.
 Do not ask for more input.
+No markdown.
+ONLY RETURN a response in this JSON format:
+{
+	"title": string,
+	"content": string
+}
 `
 
 func New() (*TLDR, error) {
@@ -51,6 +58,21 @@ func New() (*TLDR, error) {
 
 	model := &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
+		ResponseMIMEType:  "application/json",
+		ResponseJsonSchema: map[string]any{
+			"type":     "object",
+			"required": []string{"title", "content"},
+			"properties": map[string]any{
+				"title": map[string]any{
+					"type":        "string",
+					"description": "The title of the TLDR.",
+				},
+				"content": map[string]any{
+					"type":        "string",
+					"description": "The summarized content.",
+				},
+			},
+		},
 	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{

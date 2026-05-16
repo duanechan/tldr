@@ -11,13 +11,15 @@
   - [x] PATCH /reset-password
 - [ ] Initial admin seed script
 - [ ] Admin deletion
-- [ ] Pagination
+- [x] Pagination
   - [x] TLDRs
   - [x] Users (Admin)
 - [ ] Batch deletion of TLDRs
   - [ ] Users
   - [ ] Admin
-- [ ] AI-generated titles in TLDR create flow
+- [x] AI-generated titles in TLDR create flow
+- [ ] Dev endpoints in admin (DELETE /tldrs, DELETE /users)
+- [ ] API error handling in /summarize
 - [ ] Flag for sensitive TLDRs
 - [ ] Id + CreatedAt to encode PageCursor to Base64 string
 - [ ] Documentation
@@ -31,6 +33,7 @@ Plans to consider or implement in the future, if the app ever grows.
 - Indexing
 - Role-Based Access Control
 - Migrate to PostgreSQL
+- TLDR Sharing (Public, Private, Shared)
 
 ## **Frontend**
 

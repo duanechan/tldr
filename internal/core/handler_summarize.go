@@ -35,6 +35,12 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		return
+	}
+
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid or missing multipart form data")
 		return
@@ -78,19 +84,20 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
-	if err != nil {
+	var response SummarizeResponse
+	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	if err = t.insertTLDR(r.Context(), userId, response); err != nil {
 		t.Logger.Error("Failed to create TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}
 
-	duration := time.Since(start)
-
-	t.jsonResponse(w, http.StatusOK, SummarizeResponse{
-		Response: tldr.Content,
-		Duration: duration.Milliseconds(),
-	})
+	response.Duration = time.Since(start).Milliseconds()
+	t.jsonResponse(w, http.StatusOK, response)
 }
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +105,12 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
+		return
+	}
+
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
 		return
 	}
 
@@ -124,41 +137,37 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.insertTLDR(r.Context(), claims.Subject, result.Text())
-	if err != nil {
+	var response SummarizeResponse
+	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	if err = t.insertTLDR(r.Context(), userId, response); err != nil {
 		t.Logger.Error("Failed to create TLDR", "error", err.Error())
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create TLDR")
 		return
 	}
 
-	duration := time.Since(start)
-
-	t.jsonResponse(w, http.StatusOK, SummarizeResponse{
-		Response: tldr.Content,
-		Duration: duration.Milliseconds(),
-	})
+	response.Duration = time.Since(start).Milliseconds()
+	t.jsonResponse(w, http.StatusOK, response)
 }
 
-func (t *TLDR) insertTLDR(ctx context.Context, subject, content string) (*database.Tldr, error) {
-	userId, err := uuid.Parse(subject)
-	if err != nil {
-		return nil, err
-	}
-
+func (t *TLDR) insertTLDR(ctx context.Context, userId uuid.UUID, response SummarizeResponse) error {
 	tldrId, err := uuid.NewRandom()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	tldr, err := t.Queries.CreateTLDR(ctx, database.CreateTLDRParams{
+	_, err = t.Queries.CreateTLDR(ctx, database.CreateTLDRParams{
 		ID:      tldrId,
-		Title:   "TLDR-" + tldrId.String()[:6],
-		Content: content,
+		Title:   response.Title,
+		Content: response.Content,
 		UserID:  userId,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &tldr, nil
+	return nil
 }

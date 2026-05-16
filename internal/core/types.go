@@ -44,8 +44,9 @@ type registerRequest struct {
 }
 
 type SummarizeResponse struct {
-	Response string `json:"response"`
-	Duration int64  `json:"duration"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Duration int64  `json:"duration,omitempty"`
 }
 
 type SummarizeTextRequest struct {
