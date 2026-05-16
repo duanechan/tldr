@@ -3,15 +3,12 @@ package core
 import (
 	"net"
 	"net/http"
-	"time"
 
+	"github.com/duanechan/tldr/internal/types"
 	"golang.org/x/time/rate"
 )
 
-const (
-	rateLimitInterval = 1 * time.Minute
-	burstLimit        = 5
-)
+const ()
 
 func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +21,7 @@ func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
 		t.mu.Lock()
 		limiter, exists := t.clients[host]
 		if !exists {
-			limiter = rate.NewLimiter(rate.Every(rateLimitInterval), burstLimit)
+			limiter = rate.NewLimiter(rate.Every(types.RateLimitInterval), types.BurstLimit)
 			t.clients[host] = limiter
 		}
 		t.mu.Unlock()

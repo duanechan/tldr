@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/duanechan/tldr/internal/auth"
+	"github.com/duanechan/tldr/internal/types"
 )
 
 func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
@@ -27,9 +28,9 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		requestId, _ := r.Context().Value(requestIdKey).(string)
+		requestId, _ := r.Context().Value(types.RequestIdKey).(string)
 
-		ctx := context.WithValue(r.Context(), claimsKey, claims)
+		ctx := context.WithValue(r.Context(), types.ClaimsKey, claims)
 		t.Logger.Info("Authenticated Request:", "id", requestId, "user_id", userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/duanechan/tldr/internal/auth"
+	"github.com/duanechan/tldr/internal/types"
 )
 
 func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -40,5 +41,5 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
+	t.jsonResponse(w, http.StatusOK, types.AuthResponse{AccessToken: accessToken})
 }

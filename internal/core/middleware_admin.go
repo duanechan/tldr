@@ -3,13 +3,14 @@ package core
 import (
 	"net/http"
 
+	"github.com/duanechan/tldr/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 func (t *TLDR) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+		claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 		if !ok {
 			t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 			return

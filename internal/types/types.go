@@ -1,4 +1,4 @@
-package core
+package types
 
 import (
 	"encoding/json"
@@ -18,26 +18,21 @@ func (p PageCursor) MarshalJSON() ([]byte, error) {
 
 type PageLimit int64
 
-const (
-	defaultPageLimit = "10"
-	NoCursor         = "9999-12-31T00:00:00Z"
-)
-
 type HealthResponse struct {
 	Status string `json:"status"`
 	Uptime string `json:"uptime"`
 }
 
-type loginRequest struct {
+type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type authResponse struct {
+type AuthResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-type registerRequest struct {
+type RegisterRequest struct {
 	Username        string `json:"username"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirmPassword"`
@@ -65,11 +60,4 @@ type FieldError struct {
 	Message string `json:"message"`
 }
 
-const sqliteUniqueConstraint = 2067
-
-type contextKey string
-
-const (
-	claimsKey    contextKey = "claims"
-	requestIdKey contextKey = "requestId"
-)
+type ContextKey string

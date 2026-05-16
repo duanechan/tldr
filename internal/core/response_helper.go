@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+
+	"github.com/duanechan/tldr/internal/types"
 )
 
-func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code int, message string, fieldErrors ...FieldError) {
-	requestId, ok := ctx.Value(requestIdKey).(string)
+func (t *TLDR) errorResponse(w http.ResponseWriter, ctx context.Context, code int, message string, fieldErrors ...types.FieldError) {
+	requestId, ok := ctx.Value(types.RequestIdKey).(string)
 	if !ok {
 		t.Logger.Error("Failed to get request ID")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	t.jsonResponse(w, code, ErrorResponse{
+	t.jsonResponse(w, code, types.ErrorResponse{
 		Code:      code,
 		RequestID: requestId,
 		Message:   message,

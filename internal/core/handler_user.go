@@ -11,12 +11,13 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/database"
+	"github.com/duanechan/tldr/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -32,7 +33,7 @@ func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -48,7 +49,7 @@ func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -96,14 +97,14 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) > len(users) {
-		t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{Results: users})
+		t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{Results: users})
 		return
 	}
 
 	next := users[limit-1]
-	t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
+	t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{
 		Results: users[:limit-1],
-		Next:    (*PageCursor)(&next.CreatedAt),
+		Next:    (*types.PageCursor)(&next.CreatedAt),
 	})
 }
 
@@ -168,12 +169,12 @@ func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uui
 
 	updateRequest.ID = userId
 
-	var fieldError *FieldError
+	var fieldError *types.FieldError
 	cleanedUsername := strings.TrimSpace(updateRequest.Username)
 	if cleanedUsername == "" {
-		fieldError = &FieldError{Field: "username", Message: "Username is required"}
-	} else if len(cleanedUsername) < minimumUsernameLength {
-		fieldError = &FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)}
+		fieldError = &types.FieldError{Field: "username", Message: "Username is required"}
+	} else if len(cleanedUsername) < types.MinimumUsernameLength {
+		fieldError = &types.FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", types.MinimumUsernameLength)}
 	}
 
 	if fieldError != nil {
@@ -207,11 +208,11 @@ func (t *TLDR) updatePassword(w http.ResponseWriter, r *http.Request, userId uui
 
 	updateRequest.ID = userId
 
-	var fieldError *FieldError
+	var fieldError *types.FieldError
 	if strings.TrimSpace(updateRequest.Password) == "" {
-		fieldError = &FieldError{Field: "password", Message: "Password is required"}
-	} else if len(updateRequest.Password) < minimumPasswordLength {
-		fieldError = &FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)}
+		fieldError = &types.FieldError{Field: "password", Message: "Password is required"}
+	} else if len(updateRequest.Password) < types.MinimumPasswordLength {
+		fieldError = &types.FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", types.MinimumPasswordLength)}
 	}
 
 	if fieldError != nil {

@@ -10,26 +10,15 @@ import (
 	"time"
 
 	"github.com/duanechan/tldr/internal/database"
+	"github.com/duanechan/tldr/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"google.golang.org/genai"
 )
 
-var allowedFileTypes []string = []string{
-	"application/pdf",
-	"image/png",
-	"image/jpeg",
-	"image/gif",
-	"text/plain",
-}
-
-const (
-	maxUploadMemory int64 = 10 << 20
-)
-
 func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -41,7 +30,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
+	if err := r.ParseMultipartForm(types.MaxUploadMemory); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid or missing multipart form data")
 		return
 	}
@@ -54,7 +43,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	mimeType := header.Header.Get("Content-Type")
-	if !slices.Contains(allowedFileTypes, mimeType) {
+	if !slices.Contains(types.AllowedFileTypes, mimeType) {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "File type not supported")
 		return
 	}
@@ -84,7 +73,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response SummarizeResponse
+	var response types.SummarizeResponse
 	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
@@ -102,7 +91,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	claims, ok := r.Context().Value(claimsKey).(*jwt.RegisteredClaims)
+	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
 		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
@@ -114,7 +103,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req SummarizeTextRequest
+	var req types.SummarizeTextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
 		return
@@ -137,7 +126,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response SummarizeResponse
+	var response types.SummarizeResponse
 	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
 		return
@@ -153,7 +142,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, response)
 }
 
-func (t *TLDR) insertTLDR(ctx context.Context, userId uuid.UUID, response SummarizeResponse) error {
+func (t *TLDR) insertTLDR(ctx context.Context, userId uuid.UUID, response types.SummarizeResponse) error {
 	tldrId, err := uuid.NewRandom()
 	if err != nil {
 		return err
