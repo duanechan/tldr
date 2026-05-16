@@ -6,10 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
@@ -55,16 +51,18 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
 	if fieldErrors != nil {
 		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
 		return
 	}
 
 	tldrs, err := t.Queries.GetTLDRsByUser(r.Context(), database.GetTLDRsByUserParams{
-		UserID:    userId,
-		CreatedAt: time.Time(cursor),
-		Limit:     int64(limit),
+		UserID:      userId,
+		CreatedAt:   *createdAt,
+		CreatedAt_2: *createdAt,
+		ID:          id,
+		Limit:       limit + 1,
 	})
 	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
 		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{Results: []database.GetTLDRsByUserRow{}})
@@ -82,10 +80,12 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	next := tldrs[limit-1]
+	lastItem := tldrs[limit]
+	next := encodeCursor(&lastItem.CreatedAt, lastItem.ID)
+
 	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{
-		Results: tldrs[:limit-1],
-		Next:    (*PageCursor)(&next.CreatedAt),
+		Results: tldrs[:limit],
+		Next:    next,
 	})
 }
 
@@ -112,37 +112,37 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
-	cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
-	if fieldErrors != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
-		return
-	}
+	// cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	// if fieldErrors != nil {
+	// 	t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
+	// 	return
+	// }
 
-	tldrs, err := t.Queries.GetTLDRs(r.Context(), database.GetTLDRsParams{
-		CreatedAt: time.Time(cursor),
-		Limit:     int64(limit),
-	})
-	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
-		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: []database.GetTLDRsRow{}})
-		return
-	}
+	// tldrs, err := t.Queries.GetTLDRs(r.Context(), database.GetTLDRsParams{
+	// 	CreatedAt: time.Time(cursor),
+	// 	Limit:     int64(limit),
+	// })
+	// if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
+	// 	t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{Results: []database.GetTLDRsRow{}})
+	// 	return
+	// }
 
-	if err != nil {
-		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
-		return
-	}
+	// if err != nil {
+	// 	t.Logger.Error("Failed to get TLDRs", "error", err.Error())
+	// 	t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get TLDRs")
+	// 	return
+	// }
 
-	if int(limit) > len(tldrs) {
-		t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{Results: tldrs})
-		return
-	}
+	// if int(limit) > len(tldrs) {
+	// 	t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{Results: tldrs})
+	// 	return
+	// }
 
-	next := tldrs[limit-1]
-	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{
-		Results: tldrs[:limit-1],
-		Next:    (*PageCursor)(&next.CreatedAt),
-	})
+	// next := tldrs[limit-1]
+	// t.jsonResponse(w, http.StatusOK, types.Page[database.GetTLDRsRow]{
+	// 	Results: tldrs[:limit-1],
+	// 	Next:    (*types.PageCursor)(&next.CreatedAt),
+	// })
 }
 
 func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
@@ -263,33 +263,4 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
-}
-
-func extractQueryParams(query url.Values) (PageCursor, PageLimit, []FieldError) {
-	var fieldErrors []FieldError
-	cursorQuery := strings.TrimSpace(query.Get("cursor"))
-	if cursorQuery == "" {
-		cursorQuery = NoCursor
-	}
-
-	cursor, err := time.Parse(time.RFC3339, cursorQuery)
-	if err != nil {
-		fieldErrors = append(fieldErrors, FieldError{Field: "cursor", Message: "Invalid cursor format"})
-	}
-
-	limitQuery := strings.TrimSpace(query.Get("limit"))
-	if limitQuery == "" {
-		limitQuery = defaultPageLimit
-	}
-
-	limit, err := strconv.Atoi(limitQuery)
-	if err != nil {
-		fieldErrors = append(fieldErrors, FieldError{Field: "limit", Message: "Invalid limit format"})
-	}
-
-	if len(fieldErrors) > 0 {
-		return PageCursor{}, 0, fieldErrors
-	}
-
-	return PageCursor(cursor), PageLimit(limit + 1), nil
 }

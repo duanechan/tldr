@@ -168,15 +168,19 @@ const getTLDRsByUser = `-- name: GetTLDRsByUser :many
 SELECT id, created_at, updated_at, title
 FROM tldrs
 WHERE user_id = ?
-    AND created_at < ?
+    AND (created_at < ?
+        OR created_at = ?
+        AND id < ?)
 ORDER BY created_at DESC
 LIMIT ?
 `
 
 type GetTLDRsByUserParams struct {
-	UserID    uuid.UUID `json:"user_id"`
-	CreatedAt time.Time `json:"created_at"`
-	Limit     int64     `json:"limit"`
+	UserID      uuid.UUID `json:"user_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt_2 time.Time `json:"created_at_2"`
+	ID          uuid.UUID `json:"id"`
+	Limit       int64     `json:"limit"`
 }
 
 type GetTLDRsByUserRow struct {
@@ -187,7 +191,13 @@ type GetTLDRsByUserRow struct {
 }
 
 func (q *Queries) GetTLDRsByUser(ctx context.Context, arg GetTLDRsByUserParams) ([]GetTLDRsByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTLDRsByUser, arg.UserID, arg.CreatedAt, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, getTLDRsByUser,
+		arg.UserID,
+		arg.CreatedAt,
+		arg.CreatedAt_2,
+		arg.ID,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
