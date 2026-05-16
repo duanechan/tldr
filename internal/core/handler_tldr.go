@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/duanechan/tldr/internal/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,15 +19,9 @@ import (
 )
 
 func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
-
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
@@ -55,15 +50,9 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
-
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
@@ -200,36 +189,6 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
-	var updateRequest database.UpdateTLDRTitleByIdParams
-	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	tldrId, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
-		return
-	}
-
-	updateRequest.ID = tldrId
-
-	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
-	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId))
-		return
-	}
-
-	if err != nil {
-		t.Logger.Error("Failed to update TLDR", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update TLDR")
-		return
-	}
-
-	t.jsonResponse(w, http.StatusOK, tldr)
-}
-
 func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
 	if !ok {
@@ -259,6 +218,36 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
+	var updateRequest database.UpdateTLDRTitleByIdParams
+	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	tldrId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse TLDR ID")
+		return
+	}
+
+	updateRequest.ID = tldrId
+
+	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
+	if errors.Is(err, sql.ErrNoRows) {
+		t.errorResponse(w, r.Context(), http.StatusNotFound, fmt.Sprintf("TLDR with ID: %s not found", tldrId))
+		return
+	}
+
+	if err != nil {
+		t.Logger.Error("Failed to update TLDR", "error", err.Error())
+		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update TLDR")
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, tldr)
 }
 
 func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {

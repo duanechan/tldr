@@ -9,24 +9,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
 	"github.com/duanechan/tldr/internal/types"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"google.golang.org/genai"
 )
 
 func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
 
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
@@ -91,15 +86,10 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	claims, ok := r.Context().Value(types.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
-		return
-	}
 
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to parse user ID")
+		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
 		return
 	}
 
