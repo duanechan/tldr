@@ -26,8 +26,8 @@
 - [ ] Documentation
 - [ ] Testing
   - [x] config
-  - [ ] auth
-  - [ ] core
+  - [x] auth
+  - [ ] core (stashed)
 
 ### **Future**
 
