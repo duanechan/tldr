@@ -40,18 +40,45 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 			FieldError{Field: "username", Message: "Username is required"},
 		)
 	} else if len(cleanedUsername) < minimumUsernameLength {
-		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)})
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{
+				Field: "username",
+				Message: fmt.Sprintf(
+					"Username must be %d characters long",
+					minimumUsernameLength,
+				),
+			},
+		)
 	}
 
 	if strings.TrimSpace(req.Password) == "" {
 		fieldErrors = append(
 			fieldErrors,
-			FieldError{Field: "password", Message: "Password is required"},
+			FieldError{
+				Field:   "password",
+				Message: "Password is required",
+			},
 		)
 	} else if len(req.Password) < minimumPasswordLength {
-		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)})
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{
+				Field: "password",
+				Message: fmt.Sprintf(
+					"Password must be %d characters long",
+					minimumPasswordLength,
+				),
+			},
+		)
 	} else if req.Password != req.ConfirmPassword {
-		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Passwords do not match"})
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{
+				Field:   "password",
+				Message: "Passwords do not match",
+			},
+		)
 	}
 
 	if len(fieldErrors) > 0 {

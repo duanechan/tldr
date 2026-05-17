@@ -22,7 +22,7 @@
 - [x] API error handling in /summarize
 - [ ] Flag for sensitive TLDRs
 - [x] Id + CreatedAt to encode PageCursor to Base64 string
-- [ ] Refactor code to stay within 80-char line limit
+- [x] Refactor code to stay within 80-char line limit
 - [ ] Documentation
 - [ ] Testing
 
