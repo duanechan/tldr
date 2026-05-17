@@ -7,7 +7,6 @@ import (
 func (t *TLDR) LogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestId, _ := r.Context().Value(requestIdKey).(string)
-
 		t.Logger.Info(
 			"Request:",
 			"id",

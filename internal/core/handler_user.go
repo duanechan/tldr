@@ -75,37 +75,55 @@ func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
-	// cursor, limit, fieldErrors := extractQueryParams(r.URL.Query())
-	// if fieldErrors != nil {
-	// 	t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse query params", fieldErrors...)
-	// 	return
-	// }
+	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
+	if fieldErrors != nil {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to parse query params",
+			fieldErrors...)
+		return
+	}
 
-	// users, err := t.Queries.GetUsers(r.Context(), database.GetUsersParams{
-	// 	CreatedAt: time.Time(cursor),
-	// 	Limit:     int64(limit),
-	// })
-	// if errors.Is(err, sql.ErrNoRows) || users == nil {
-	// 	t.jsonResponse(w, http.StatusOK, []database.User{})
-	// 	return
-	// }
+	users, err := t.Queries.GetUsers(r.Context(), database.GetUsersParams{
+		CreatedAt:   *createdAt,
+		CreatedAt_2: *createdAt,
+		ID:          id,
+		Limit:       limit + 1,
+	})
+	if errors.Is(err, sql.ErrNoRows) || users == nil {
+		t.jsonResponse(w, http.StatusOK, []database.User{})
+		return
+	}
 
-	// if err != nil {
-	// 	t.Logger.Error("Failed to get users", "error", err.Error())
-	// 	t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get users")
-	// 	return
-	// }
+	if err != nil {
+		t.Logger.Error("Failed to get users", "error", err.Error())
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to get users",
+		)
+		return
+	}
 
-	// if int(limit) > len(users) {
-	// 	t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{Results: users})
-	// 	return
-	// }
+	if int(limit) >= len(users) {
+		t.jsonResponse(
+			w,
+			http.StatusOK,
+			Page[database.GetUsersRow]{Results: users},
+		)
+		return
+	}
 
-	// next := users[limit-1]
-	// t.jsonResponse(w, http.StatusOK, types.Page[database.GetUsersRow]{
-	// 	Results: users[:limit-1],
-	// 	Next:    (*types.PageCursor)(&next.CreatedAt),
-	// })
+	lastItem := users[limit]
+	next := encodeCursor(&lastItem.CreatedAt, lastItem.ID)
+
+	t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
+		Results: users[:limit],
+		Next:    next,
+	})
 }
 
 func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
@@ -215,7 +233,13 @@ func (t *TLDR) updateUsername(
 			Message: "Username is required",
 		}
 	} else if len(cleanedUsername) < minimumUsernameLength {
-		fieldError = &FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)}
+		fieldError = &FieldError{
+			Field: "username",
+			Message: fmt.Sprintf(
+				"Username must be %d characters long",
+				minimumUsernameLength,
+			),
+		}
 	}
 
 	if fieldError != nil {
@@ -281,7 +305,13 @@ func (t *TLDR) updatePassword(
 			Message: "Password is required",
 		}
 	} else if len(updateRequest.Password) < minimumPasswordLength {
-		fieldError = &FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)}
+		fieldError = &FieldError{
+			Field: "password",
+			Message: fmt.Sprintf(
+				"Password must be %d characters long",
+				minimumPasswordLength,
+			),
+		}
 	}
 
 	if fieldError != nil {

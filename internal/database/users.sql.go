@@ -117,13 +117,16 @@ const getUsers = `-- name: GetUsers :many
 SELECT id, created_at, updated_at, username
 FROM users
 WHERE created_at < ?
+    OR (created_at = ? AND id < ?)
 ORDER BY created_at DESC
 LIMIT ?
 `
 
 type GetUsersParams struct {
-	CreatedAt time.Time `json:"created_at"`
-	Limit     int64     `json:"limit"`
+	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt_2 time.Time `json:"created_at_2"`
+	ID          uuid.UUID `json:"id"`
+	Limit       int64     `json:"limit"`
 }
 
 type GetUsersRow struct {
@@ -134,7 +137,12 @@ type GetUsersRow struct {
 }
 
 func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers, arg.CreatedAt, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, getUsers,
+		arg.CreatedAt,
+		arg.CreatedAt_2,
+		arg.ID,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

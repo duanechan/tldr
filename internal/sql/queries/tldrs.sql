@@ -9,8 +9,7 @@ FROM tldrs
 WHERE user_id = ?
     AND (
         created_at < ?
-        OR created_at = ?
-        AND id < ?
+        OR (created_at = ? AND id < ?)
     )
 ORDER BY created_at DESC
 LIMIT ?;
@@ -30,8 +29,7 @@ WHERE id = ?;
 SELECT id, created_at, updated_at, title
 FROM tldrs
 WHERE created_at < ?
-    OR created_at = ?
-    AND id < ?
+    OR (created_at = ? AND id < ?)
 ORDER BY created_at DESC
 LIMIT ?;
 
