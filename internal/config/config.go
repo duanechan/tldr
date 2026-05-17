@@ -36,6 +36,12 @@ func New() (*Config, error) {
 		port = "8080"
 	}
 
+	if environment == "" {
+		return nil, errors.New(
+			"Missing Application Environment (APP_ENV) environment variable",
+		)
+	}
+
 	if jwtSecret == "" {
 		return nil, errors.New(
 			"Missing JWT Access Secret (JWT_ACCESS_SECRET) environment variable",
@@ -44,7 +50,7 @@ func New() (*Config, error) {
 
 	if jwtExpiryString == "" {
 		return nil, errors.New(
-			"Missing JWT Expiry (JWT_EXPIRY_IN_SECONDS) environment variable",
+			"Missing JWT Expiry (JWT_ACCESS_EXPIRY_IN_SECONDS) environment variable",
 		)
 	}
 

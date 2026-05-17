@@ -25,6 +25,9 @@
 - [x] Refactor code to stay within 80-char line limit
 - [ ] Documentation
 - [ ] Testing
+  - [x] config
+  - [ ] auth
+  - [ ] core
 
 ### **Future**
 
