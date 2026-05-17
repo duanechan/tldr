@@ -12,6 +12,25 @@ import (
 	"github.com/google/uuid"
 )
 
+type Page[T any] struct {
+	Next    PageCursor `json:"next,omitempty"`
+	Results []T        `json:"results"`
+}
+
+type PageCursor string
+type PageLimit int64
+
+const (
+	PageCursorSeparator = "|"
+	DefaultPageLimit    = "10"
+	MaxPageLimit        = 100
+)
+
+var (
+	cursorEpochMax    = time.Unix(25340221440, 0)
+	DefaultPageCursor = encodeCursor(&cursorEpochMax, uuid.Max)
+)
+
 func extractQueryParams(query url.Values) (
 	*time.Time,
 	uuid.UUID,
@@ -22,7 +41,7 @@ func extractQueryParams(query url.Values) (
 
 	cursor := strings.TrimSpace(query.Get("cursor"))
 	if cursor == "" {
-		cursor = DefaultPageCursor
+		cursor = string(DefaultPageCursor)
 	}
 
 	createdAt, id, err := decodeCursor(cursor)

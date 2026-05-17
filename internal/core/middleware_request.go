@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const requestIdKey = "requestId"
+
 func (t *TLDR) RequestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestId := uuid.Must(uuid.NewRandom())

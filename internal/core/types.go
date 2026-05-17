@@ -1,20 +1,5 @@
 package core
 
-type Page[T any] struct {
-	Next    PageCursor `json:"next,omitempty"`
-	Results []T        `json:"results"`
-}
-
-type PageCursor string
-type PageLimit int64
-
-const (
-	PageCursorSeparator = "|"
-	DefaultPageCursor   = "MjUzNDAyMjE0NDAwfGZmZmZmZmZmLWZmZmYtZmZmZi1mZmZmLWZmZmZmZmZmZmZmZg"
-	DefaultPageLimit    = "10"
-	MaxPageLimit        = 100
-)
-
 type HealthResponse struct {
 	Status string `json:"status"`
 	Uptime string `json:"uptime"`
@@ -58,7 +43,3 @@ type FieldError struct {
 }
 
 const sqliteUniqueConstraint = 2067
-
-const (
-	requestIdKey = "requestId"
-)
