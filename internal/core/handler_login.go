@@ -14,49 +14,96 @@ import (
 func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
 		return
 	}
 
 	cleanedUsername := strings.TrimSpace(req.Username)
 	if cleanedUsername == "" || strings.TrimSpace(req.Password) == "" {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Username/password is required")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Username/password is required",
+		)
 		return
 	}
 
-	user, err := t.Queries.GetUserCredentialsByUsername(r.Context(), cleanedUsername)
+	user, err := t.Queries.GetUserCredentialsByUsername(
+		r.Context(),
+		cleanedUsername,
+	)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid username/password")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid username/password",
+		)
 		return
 	}
 
 	if err != nil {
 		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to get user",
+		)
 		return
 	}
 
 	matches, err := argon2id.ComparePasswordAndHash(req.Password, user.Password)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Something went wrong",
+		)
 		return
 	}
 
 	if !matches {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid username/password")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid username/password",
+		)
 		return
 	}
 
-	accessToken, err := auth.CreateJWT(user.ID, t.Config.JWTSecret, t.Config.JWTExpiry)
+	accessToken, err := auth.CreateJWT(
+		user.ID,
+		t.Config.JWTSecret,
+		t.Config.JWTExpiry,
+	)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create access token")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to create access token",
+		)
 		return
 	}
 
 	refreshToken, err := t.insertRefreshToken(r.Context(), user.ID)
 	if err != nil {
 		t.Logger.Info("Failed to create refresh token", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create refresh token")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to create refresh token",
+		)
 		return
 	}
 

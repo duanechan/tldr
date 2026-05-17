@@ -37,15 +37,21 @@ func New() (*Config, error) {
 	}
 
 	if jwtSecret == "" {
-		return nil, errors.New("Missing JWT Access Secret (JWT_ACCESS_SECRET) environment variable")
+		return nil, errors.New(
+			"Missing JWT Access Secret (JWT_ACCESS_SECRET) environment variable",
+		)
 	}
 
 	if jwtExpiryString == "" {
-		return nil, errors.New("Missing JWT Expiry (JWT_EXPIRY_IN_SECONDS) environment variable")
+		return nil, errors.New(
+			"Missing JWT Expiry (JWT_EXPIRY_IN_SECONDS) environment variable",
+		)
 	}
 
 	if refreshExpiryString == "" {
-		return nil, errors.New("Missing Refresh Token Expiry (REFRESH_EXPIRY_IN_SECONDS) environment variable")
+		return nil, errors.New(
+			"Missing Refresh Token Expiry (REFRESH_EXPIRY_IN_SECONDS) environment variable",
+		)
 	}
 
 	accessExpiry, err := strconv.Atoi(jwtExpiryString)
@@ -59,11 +65,15 @@ func New() (*Config, error) {
 	}
 
 	if apiModel == "" {
-		return nil, errors.New("Missing Gemini Model (GEMINI_MODEL) environment variable")
+		return nil, errors.New(
+			"Missing Gemini Model (GEMINI_MODEL) environment variable",
+		)
 	}
 
 	if apiKey == "" {
-		return nil, errors.New("Missing Gemini API Key (GEMINI_API_KEY) environment variable")
+		return nil, errors.New(
+			"Missing Gemini API Key (GEMINI_API_KEY) environment variable",
+		)
 	}
 
 	return &Config{

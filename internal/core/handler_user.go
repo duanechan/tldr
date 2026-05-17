@@ -17,7 +17,12 @@ import (
 func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid claims",
+		)
 		return
 	}
 
@@ -27,7 +32,12 @@ func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid claims",
+		)
 		return
 	}
 
@@ -37,7 +47,12 @@ func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusUnauthorized, "Invalid claims")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid claims",
+		)
 		return
 	}
 
@@ -47,7 +62,12 @@ func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to parse user ID",
+		)
 		return
 	}
 
@@ -91,7 +111,12 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to parse user ID",
+		)
 		return
 	}
 
@@ -101,7 +126,12 @@ func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to parse user ID",
+		)
 		return
 	}
 
@@ -111,20 +141,34 @@ func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to parse user ID")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to parse user ID",
+		)
 		return
 	}
 
 	if err = t.Queries.DeleteUser(r.Context(), userId); err != nil {
 		t.Logger.Error("Failed to delete user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to delete user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete user",
+		)
 		return
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func (t *TLDR) getUser(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
+func (t *TLDR) getUser(
+	w http.ResponseWriter,
+	r *http.Request,
+	userId uuid.UUID,
+) {
 	user, err := t.Queries.GetUserById(r.Context(), userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		t.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
@@ -133,17 +177,31 @@ func (t *TLDR) getUser(w http.ResponseWriter, r *http.Request, userId uuid.UUID)
 
 	if err != nil {
 		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to get user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to get user",
+		)
 		return
 	}
 
 	t.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
+func (t *TLDR) updateUsername(
+	w http.ResponseWriter,
+	r *http.Request,
+	userId uuid.UUID,
+) {
 	var updateRequest database.UpdateUsernameParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
 		return
 	}
 
@@ -152,13 +210,22 @@ func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uui
 	var fieldError *FieldError
 	cleanedUsername := strings.TrimSpace(updateRequest.Username)
 	if cleanedUsername == "" {
-		fieldError = &FieldError{Field: "username", Message: "Username is required"}
+		fieldError = &FieldError{
+			Field:   "username",
+			Message: "Username is required",
+		}
 	} else if len(cleanedUsername) < minimumUsernameLength {
 		fieldError = &FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)}
 	}
 
 	if fieldError != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to update username", *fieldError)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to update username",
+			*fieldError,
+		)
 		return
 	}
 
@@ -166,23 +233,42 @@ func (t *TLDR) updateUsername(w http.ResponseWriter, r *http.Request, userId uui
 
 	user, err := t.Queries.UpdateUsername(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, "Failed to update user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusNotFound,
+			"Failed to update user",
+		)
 		return
 	}
 
 	if err != nil {
 		t.Logger.Error("Failed to update user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to update user",
+		)
 		return
 	}
 
 	t.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) updatePassword(w http.ResponseWriter, r *http.Request, userId uuid.UUID) {
+func (t *TLDR) updatePassword(
+	w http.ResponseWriter,
+	r *http.Request,
+	userId uuid.UUID,
+) {
 	var updateRequest database.UpdatePasswordParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
 		return
 	}
 
@@ -190,19 +276,36 @@ func (t *TLDR) updatePassword(w http.ResponseWriter, r *http.Request, userId uui
 
 	var fieldError *FieldError
 	if strings.TrimSpace(updateRequest.Password) == "" {
-		fieldError = &FieldError{Field: "password", Message: "Password is required"}
+		fieldError = &FieldError{
+			Field:   "password",
+			Message: "Password is required",
+		}
 	} else if len(updateRequest.Password) < minimumPasswordLength {
 		fieldError = &FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)}
 	}
 
 	if fieldError != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to update password", *fieldError)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to update password",
+			*fieldError,
+		)
 		return
 	}
 
-	hashedPassword, err := argon2id.CreateHash(updateRequest.Password, argon2id.DefaultParams)
+	hashedPassword, err := argon2id.CreateHash(
+		updateRequest.Password,
+		argon2id.DefaultParams,
+	)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -216,7 +319,12 @@ func (t *TLDR) updatePassword(w http.ResponseWriter, r *http.Request, userId uui
 
 	if err != nil {
 		t.Logger.Error("Failed to update password", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to update password")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to update password",
+		)
 		return
 	}
 

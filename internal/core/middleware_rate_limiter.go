@@ -17,7 +17,12 @@ func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid IP address")
+			t.errorResponse(
+				w,
+				r.Context(),
+				http.StatusBadRequest,
+				"Invalid IP address",
+			)
 			return
 		}
 
@@ -30,7 +35,12 @@ func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
 		t.mu.Unlock()
 
 		if !limiter.Allow() {
-			t.errorResponse(w, r.Context(), http.StatusTooManyRequests, "Rate limit exceeded, try again later")
+			t.errorResponse(
+				w,
+				r.Context(),
+				http.StatusTooManyRequests,
+				"Rate limit exceeded, try again later",
+			)
 			return
 		}
 

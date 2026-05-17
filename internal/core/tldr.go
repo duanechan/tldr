@@ -96,7 +96,9 @@ func New() (*TLDR, error) {
 		return nil, err
 	}
 
-	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}))
+	logger := slog.New(
+		tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}),
+	)
 	mux := http.NewServeMux()
 
 	return &TLDR{

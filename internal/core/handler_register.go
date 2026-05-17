@@ -24,19 +24,30 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	fieldErrors := []FieldError{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Invalid request body")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
 		return
 	}
 
 	cleanedUsername := strings.TrimSpace(req.Username)
 	if cleanedUsername == "" {
-		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: "Username is required"})
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{Field: "username", Message: "Username is required"},
+		)
 	} else if len(cleanedUsername) < minimumUsernameLength {
 		fieldErrors = append(fieldErrors, FieldError{Field: "username", Message: fmt.Sprintf("Username must be %d characters long", minimumUsernameLength)})
 	}
 
 	if strings.TrimSpace(req.Password) == "" {
-		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: "Password is required"})
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{Field: "password", Message: "Password is required"},
+		)
 	} else if len(req.Password) < minimumPasswordLength {
 		fieldErrors = append(fieldErrors, FieldError{Field: "password", Message: fmt.Sprintf("Password must be %d characters long", minimumPasswordLength)})
 	} else if req.Password != req.ConfirmPassword {
@@ -44,19 +55,37 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(fieldErrors) > 0 {
-		t.errorResponse(w, r.Context(), http.StatusBadRequest, "Failed to validate credentials", fieldErrors...)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to validate credentials",
+			fieldErrors...)
 		return
 	}
 
-	hashedPassword, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
+	hashedPassword, err := argon2id.CreateHash(
+		req.Password,
+		argon2id.DefaultParams,
+	)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Something went wrong",
+		)
 		return
 	}
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Something went wrong")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Something went wrong",
+		)
 		return
 	}
 
@@ -65,35 +94,67 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		Username: cleanedUsername,
 		Password: hashedPassword,
 	})
-	if sqliteErr, ok := err.(*sqlite.Error); ok && sqliteErr.Code() == sqliteUniqueConstraint {
-		t.errorResponse(w, r.Context(), http.StatusConflict, "Username already taken")
+	if sqliteErr, ok := err.(*sqlite.Error); ok &&
+		sqliteErr.Code() == sqliteUniqueConstraint {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusConflict,
+			"Username already taken",
+		)
 		return
 	}
 
 	if err != nil {
 		t.Logger.Error("Failed to create user", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create user")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to create user",
+		)
 		return
 	}
 
-	accessToken, err := auth.CreateJWT(id, t.Config.JWTSecret, t.Config.JWTExpiry)
+	accessToken, err := auth.CreateJWT(
+		id,
+		t.Config.JWTSecret,
+		t.Config.JWTExpiry,
+	)
 	if err != nil {
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create access token")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to create access token",
+		)
 		return
 	}
 
 	refreshToken, err := t.insertRefreshToken(r.Context(), user.ID)
 	if err != nil {
 		t.Logger.Info("Failed to create refresh token", "error", err.Error())
-		t.errorResponse(w, r.Context(), http.StatusInternalServerError, "Failed to create refresh token")
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to create refresh token",
+		)
 		return
 	}
 
 	t.setRefreshTokenCookie(w, *refreshToken)
-	t.jsonResponse(w, http.StatusCreated, authResponse{AccessToken: accessToken})
+	t.jsonResponse(
+		w,
+		http.StatusCreated,
+		authResponse{AccessToken: accessToken},
+	)
 }
 
-func (t *TLDR) insertRefreshToken(ctx context.Context, id uuid.UUID) (*database.RefreshToken, error) {
+func (t *TLDR) insertRefreshToken(
+	ctx context.Context,
+	id uuid.UUID,
+) (*database.RefreshToken, error) {
 	refreshTokenId, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -104,12 +165,15 @@ func (t *TLDR) insertRefreshToken(ctx context.Context, id uuid.UUID) (*database.
 		return nil, err
 	}
 
-	refreshToken, err := t.Queries.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
-		ID:        refreshTokenId,
-		Token:     refreshTokenString,
-		UserID:    id,
-		ExpiresAt: time.Now().Add(t.Config.RefreshExpiry),
-	})
+	refreshToken, err := t.Queries.CreateRefreshToken(
+		ctx,
+		database.CreateRefreshTokenParams{
+			ID:        refreshTokenId,
+			Token:     refreshTokenString,
+			UserID:    id,
+			ExpiresAt: time.Now().Add(t.Config.RefreshExpiry),
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +181,10 @@ func (t *TLDR) insertRefreshToken(ctx context.Context, id uuid.UUID) (*database.
 	return &refreshToken, nil
 }
 
-func (t *TLDR) setRefreshTokenCookie(w http.ResponseWriter, refreshToken database.RefreshToken) {
+func (t *TLDR) setRefreshTokenCookie(
+	w http.ResponseWriter,
+	refreshToken database.RefreshToken,
+) {
 	var sameSite http.SameSite
 
 	switch t.Config.Environment {
