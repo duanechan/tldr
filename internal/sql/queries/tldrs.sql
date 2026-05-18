@@ -51,6 +51,15 @@ DELETE FROM tldrs
 WHERE user_id = ?
     AND id = ?;
 
+-- name: DeleteTLDRsByIdAndUser :exec
+DELETE FROM tldrs
+WHERE user_id = ?
+    AND id IN (sqlc.slice('ids'));
+
+-- name: DeleteTLDRs :exec
+DELETE FROM tldrs
+WHERE id IN (sqlc.slice('ids'));
+
 -- name: DeleteTLDRById :exec
 DELETE FROM tldrs
 WHERE id = ?;

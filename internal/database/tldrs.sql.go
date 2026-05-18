@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -67,6 +68,53 @@ WHERE id = ?
 
 func (q *Queries) DeleteTLDRById(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteTLDRById, id)
+	return err
+}
+
+const deleteTLDRs = `-- name: DeleteTLDRs :exec
+DELETE FROM tldrs
+WHERE id IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) DeleteTLDRs(ctx context.Context, ids []uuid.UUID) error {
+	query := deleteTLDRs
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
+	return err
+}
+
+const deleteTLDRsByIdAndUser = `-- name: DeleteTLDRsByIdAndUser :exec
+DELETE FROM tldrs
+WHERE user_id = ?
+    AND id IN (/*SLICE:ids*/?)
+`
+
+type DeleteTLDRsByIdAndUserParams struct {
+	UserID uuid.UUID   `json:"user_id"`
+	Ids    []uuid.UUID `json:"ids"`
+}
+
+func (q *Queries) DeleteTLDRsByIdAndUser(ctx context.Context, arg DeleteTLDRsByIdAndUserParams) error {
+	query := deleteTLDRsByIdAndUser
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.UserID)
+	if len(arg.Ids) > 0 {
+		for _, v := range arg.Ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(arg.Ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
 	return err
 }
 

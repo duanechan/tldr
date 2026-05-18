@@ -44,3 +44,7 @@ RETURNING *;
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = ?;
+
+-- name: DeleteUsers :exec
+DELETE FROM users
+WHERE id IN (sqlc.slice('ids'));

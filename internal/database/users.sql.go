@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,6 +45,26 @@ WHERE id = ?
 
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
+const deleteUsers = `-- name: DeleteUsers :exec
+DELETE FROM users
+WHERE id IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) DeleteUsers(ctx context.Context, ids []uuid.UUID) error {
+	query := deleteUsers
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
 	return err
 }
 
