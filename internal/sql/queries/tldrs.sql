@@ -4,7 +4,7 @@ VALUES (?, ?, ?, ?)
 RETURNING *;
 
 -- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title
+SELECT id, created_at, updated_at, title, flag
 FROM tldrs
 WHERE user_id = ?
     AND (
@@ -26,7 +26,7 @@ FROM tldrs
 WHERE id = ?;
 
 -- name: GetTLDRs :many
-SELECT id, created_at, updated_at, title
+SELECT id, created_at, updated_at, title, flag
 FROM tldrs
 WHERE created_at < ?
     OR (created_at = ? AND id < ?)

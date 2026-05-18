@@ -17,7 +17,7 @@ import (
 const createTLDR = `-- name: CreateTLDR :one
 INSERT INTO tldrs (id, title, content, user_id)
 VALUES (?, ?, ?, ?)
-RETURNING id, created_at, updated_at, title, content, user_id
+RETURNING id, created_at, updated_at, title, content, user_id, flag
 `
 
 type CreateTLDRParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) CreateTLDR(ctx context.Context, arg CreateTLDRParams) (Tldr, e
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Flag,
 	)
 	return i, err
 }
@@ -126,7 +127,7 @@ func (q *Queries) DeleteTLDRsByIdAndUser(ctx context.Context, arg DeleteTLDRsByI
 }
 
 const getTLDRByIDAndUser = `-- name: GetTLDRByIDAndUser :one
-SELECT id, created_at, updated_at, title, content, user_id
+SELECT id, created_at, updated_at, title, content, user_id, flag
 FROM tldrs
 WHERE user_id = ?
     AND id = ?
@@ -147,12 +148,13 @@ func (q *Queries) GetTLDRByIDAndUser(ctx context.Context, arg GetTLDRByIDAndUser
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Flag,
 	)
 	return i, err
 }
 
 const getTLDRById = `-- name: GetTLDRById :one
-SELECT id, created_at, updated_at, title, content, user_id
+SELECT id, created_at, updated_at, title, content, user_id, flag
 FROM tldrs
 WHERE id = ?
 `
@@ -167,12 +169,13 @@ func (q *Queries) GetTLDRById(ctx context.Context, id uuid.UUID) (Tldr, error) {
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Flag,
 	)
 	return i, err
 }
 
 const getTLDRs = `-- name: GetTLDRs :many
-SELECT id, created_at, updated_at, title
+SELECT id, created_at, updated_at, title, flag
 FROM tldrs
 WHERE created_at < ?
     OR (created_at = ? AND id < ?)
@@ -192,6 +195,7 @@ type GetTLDRsRow struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Title     string    `json:"title"`
+	Flag      string    `json:"flag"`
 }
 
 func (q *Queries) GetTLDRs(ctx context.Context, arg GetTLDRsParams) ([]GetTLDRsRow, error) {
@@ -213,6 +217,7 @@ func (q *Queries) GetTLDRs(ctx context.Context, arg GetTLDRsParams) ([]GetTLDRsR
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Title,
+			&i.Flag,
 		); err != nil {
 			return nil, err
 		}
@@ -228,7 +233,7 @@ func (q *Queries) GetTLDRs(ctx context.Context, arg GetTLDRsParams) ([]GetTLDRsR
 }
 
 const getTLDRsByUser = `-- name: GetTLDRsByUser :many
-SELECT id, created_at, updated_at, title
+SELECT id, created_at, updated_at, title, flag
 FROM tldrs
 WHERE user_id = ?
     AND (
@@ -252,6 +257,7 @@ type GetTLDRsByUserRow struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Title     string    `json:"title"`
+	Flag      string    `json:"flag"`
 }
 
 func (q *Queries) GetTLDRsByUser(ctx context.Context, arg GetTLDRsByUserParams) ([]GetTLDRsByUserRow, error) {
@@ -274,6 +280,7 @@ func (q *Queries) GetTLDRsByUser(ctx context.Context, arg GetTLDRsByUserParams) 
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Title,
+			&i.Flag,
 		); err != nil {
 			return nil, err
 		}
@@ -293,7 +300,7 @@ UPDATE tldrs
 SET title = ?
 WHERE user_id = ?
     AND id = ?
-RETURNING id, created_at, updated_at, title, content, user_id
+RETURNING id, created_at, updated_at, title, content, user_id, flag
 `
 
 type UpdateTLDRTitleParams struct {
@@ -312,6 +319,7 @@ func (q *Queries) UpdateTLDRTitle(ctx context.Context, arg UpdateTLDRTitleParams
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Flag,
 	)
 	return i, err
 }
@@ -320,7 +328,7 @@ const updateTLDRTitleById = `-- name: UpdateTLDRTitleById :one
 UPDATE tldrs
 SET title = ?
 WHERE id = ?
-RETURNING id, created_at, updated_at, title, content, user_id
+RETURNING id, created_at, updated_at, title, content, user_id, flag
 `
 
 type UpdateTLDRTitleByIdParams struct {
@@ -338,6 +346,7 @@ func (q *Queries) UpdateTLDRTitleById(ctx context.Context, arg UpdateTLDRTitleBy
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Flag,
 	)
 	return i, err
 }
