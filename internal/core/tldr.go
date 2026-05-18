@@ -39,7 +39,8 @@ const prompt = `
 	Extract its keypoints, if necessary, and ensure the user understands what
 	the contents are.
 	
-	Keep the content brief and simple (250-500 words).
+	Keep the content brief and simple (10% of original content with a maximum
+	of 200 words).
 
 	Provide a flag (Safe, Mild, Dangerous) based on the contents of the
 	summary. Sensitive information (medical info, credit cards, etc.) should

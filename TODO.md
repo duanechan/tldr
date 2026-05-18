@@ -20,7 +20,7 @@
 - [x] AI-generated titles in TLDR create flow
 - [x] Dev endpoints in admin (DELETE /tldrs, DELETE /users)
 - [x] API error handling in /summarize
-- [ ] Flag for sensitive TLDRs
+- [x] Flag for sensitive TLDRs
 - [x] Id + CreatedAt to encode PageCursor to Base64 string
 - [x] Refactor code to stay within 80-char line limit
 - [ ] Documentation

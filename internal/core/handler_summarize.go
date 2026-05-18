@@ -51,28 +51,17 @@ func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("document")
+	file, _, err := r.FormFile("file")
 	if err != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
-			"Invalid or missing document field",
+			"Invalid or missing file field",
 		)
 		return
 	}
 	defer file.Close()
-
-	mimeType := header.Header.Get("Content-Type")
-	if !slices.Contains(allowedFileTypes, mimeType) {
-		a.errorResponse(
-			w,
-			r.Context(),
-			http.StatusBadRequest,
-			"File type not supported",
-		)
-		return
-	}
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
@@ -81,6 +70,17 @@ func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			http.StatusInternalServerError,
 			"Something went wrong",
+		)
+		return
+	}
+
+	mimeType := http.DetectContentType(fileBytes)
+	if !slices.Contains(allowedFileTypes, mimeType) {
+		a.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"File type not supported",
 		)
 		return
 	}
