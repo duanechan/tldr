@@ -36,28 +36,22 @@ const prompt = `
 	Summarize the documents, text files, raw text, or images that are provided
 	to you.
 	
-	Extract its keypoints, if necessary, and ensure the user understands what
-	the contents are.
+	Extract its keypoints and ensure the user understands what the contents are.
 	
 	Keep the content brief and simple (10% of original content with a maximum
 	of 200 words).
 
-	Provide a flag (Safe, Mild, Dangerous) based on the contents of the
-	summary. Sensitive information (medical info, credit cards, etc.) should
-	be automatically flagged as dangerous.
+	Contents are labelled 'safe', if it's public info, generic documents, code,
+	articles.
+
+	Contents are labelled 'mild', if it's personal but not harmful if exposed.
+
+	Contents are labelled 'dangerous' if it contains sensitive information
+	(medical records, PII, financial data, credentials, legal docs, etc.)
 	
 	Don't make the title too verbose.
 	
 	Do not ask for more input.
-	
-	No markdown.
-	
-	ONLY RETURN a response in this JSON format:
-	{
-		"title": string,
-		"content": string,
-		"flag": Safe | Mild | Dangerous
-	}
 	`
 
 func New() (*App, error) {
