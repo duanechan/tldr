@@ -1,8 +1,14 @@
 package core
 
+type Services struct {
+	Database string `json:"database"`
+	Model    string `json:"model"`
+}
+
 type HealthResponse struct {
-	Status string `json:"status"`
-	Uptime string `json:"uptime"`
+	Status   string   `json:"status"`
+	Uptime   string   `json:"uptime"`
+	Services Services `json:"services"`
 }
 
 type loginRequest struct {
