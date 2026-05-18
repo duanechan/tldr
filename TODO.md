@@ -14,9 +14,9 @@
 - [x] Pagination
   - [x] TLDRs
   - [x] Users (Admin)
-- [ ] Batch deletion of TLDRs
-  - [ ] Users
-  - [ ] Admin
+- [x] Batch deletion of TLDRs
+  - [x] Users
+  - [x] Admin
 - [x] AI-generated titles in TLDR create flow
 - [ ] Dev endpoints in admin (DELETE /tldrs, DELETE /users)
 - [x] API error handling in /summarize
