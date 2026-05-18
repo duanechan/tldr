@@ -40,6 +40,10 @@ const prompt = `
 	the contents are.
 	
 	Keep the content brief and simple (250-500 words).
+
+	Provide a flag (Safe, Mild, Dangerous) based on the contents of the
+	summary. Sensitive information (medical info, credit cards, etc.) should
+	be automatically flagged as dangerous.
 	
 	Don't make the title too verbose.
 	
@@ -50,7 +54,8 @@ const prompt = `
 	ONLY RETURN a response in this JSON format:
 	{
 		"title": string,
-		"content": string
+		"content": string,
+		"flag": Safe | Mild | Dangerous
 	}
 	`
 
@@ -70,7 +75,7 @@ func New() (*App, error) {
 		ResponseMIMEType:  "application/json",
 		ResponseJsonSchema: map[string]any{
 			"type":     "object",
-			"required": []string{"title", "content"},
+			"required": []string{"title", "content", "flag"},
 			"properties": map[string]any{
 				"title": map[string]any{
 					"type":        "string",
@@ -79,6 +84,11 @@ func New() (*App, error) {
 				"content": map[string]any{
 					"type":        "string",
 					"description": "The summarized content.",
+				},
+				"flag": map[string]any{
+					"type":        "string",
+					"enum":        []string{"Safe", "Mild", "Dangerous"},
+					"description": "Safety level of the content.",
 				},
 			},
 		},
