@@ -182,6 +182,54 @@ func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	t.jsonResponse(w, http.StatusNoContent, nil)
 }
 
+func (t *TLDR) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
+	if t.Config.Environment != "dev" {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid application environment",
+		)
+		return
+	}
+
+	res, err := t.Queries.DeleteAllUsers(r.Context())
+	if err != nil {
+		t.Logger.Error("Failed to delete users", "error", err.Error())
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete users",
+		)
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		t.Logger.Error(
+			"Failed to delete users",
+			"error",
+			err.Error(),
+			"rows",
+			rowsAffected,
+		)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete users",
+		)
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, struct {
+		Message string
+	}{
+		Message: fmt.Sprintf("Deleted %d users", rowsAffected),
+	})
+}
+
 func (t *TLDR) getUser(
 	w http.ResponseWriter,
 	r *http.Request,

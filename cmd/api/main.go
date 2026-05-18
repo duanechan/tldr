@@ -98,6 +98,7 @@ func main() {
 		http.HandlerFunc(app.AdminUpdatePassword),
 	)
 	admin.Handle("DELETE /users/{id}", http.HandlerFunc(app.AdminDeleteUser))
+	admin.Handle("DELETE /users/all", http.HandlerFunc(app.AdminDeleteAllUsers))
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle(

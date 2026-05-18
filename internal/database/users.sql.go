@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"time"
 
@@ -36,6 +37,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 	)
 	return i, err
+}
+
+const deleteAllUsers = `-- name: DeleteAllUsers :execresult
+DELETE FROM users
+`
+
+func (q *Queries) DeleteAllUsers(ctx context.Context) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deleteAllUsers)
 }
 
 const deleteUser = `-- name: DeleteUser :exec
