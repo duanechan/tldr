@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"time"
 
@@ -71,12 +72,12 @@ func (q *Queries) DeleteTLDRById(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const deleteTLDRs = `-- name: DeleteTLDRs :exec
+const deleteTLDRs = `-- name: DeleteTLDRs :execresult
 DELETE FROM tldrs
 WHERE id IN (/*SLICE:ids*/?)
 `
 
-func (q *Queries) DeleteTLDRs(ctx context.Context, ids []uuid.UUID) error {
+func (q *Queries) DeleteTLDRs(ctx context.Context, ids []uuid.UUID) (sql.Result, error) {
 	query := deleteTLDRs
 	var queryParams []interface{}
 	if len(ids) > 0 {
@@ -87,11 +88,10 @@ func (q *Queries) DeleteTLDRs(ctx context.Context, ids []uuid.UUID) error {
 	} else {
 		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
 	}
-	_, err := q.db.ExecContext(ctx, query, queryParams...)
-	return err
+	return q.db.ExecContext(ctx, query, queryParams...)
 }
 
-const deleteTLDRsByIdAndUser = `-- name: DeleteTLDRsByIdAndUser :exec
+const deleteTLDRsByIdAndUser = `-- name: DeleteTLDRsByIdAndUser :execresult
 DELETE FROM tldrs
 WHERE user_id = ?
     AND id IN (/*SLICE:ids*/?)
@@ -102,7 +102,7 @@ type DeleteTLDRsByIdAndUserParams struct {
 	Ids    []uuid.UUID `json:"ids"`
 }
 
-func (q *Queries) DeleteTLDRsByIdAndUser(ctx context.Context, arg DeleteTLDRsByIdAndUserParams) error {
+func (q *Queries) DeleteTLDRsByIdAndUser(ctx context.Context, arg DeleteTLDRsByIdAndUserParams) (sql.Result, error) {
 	query := deleteTLDRsByIdAndUser
 	var queryParams []interface{}
 	queryParams = append(queryParams, arg.UserID)
@@ -114,8 +114,7 @@ func (q *Queries) DeleteTLDRsByIdAndUser(ctx context.Context, arg DeleteTLDRsByI
 	} else {
 		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
 	}
-	_, err := q.db.ExecContext(ctx, query, queryParams...)
-	return err
+	return q.db.ExecContext(ctx, query, queryParams...)
 }
 
 const getTLDRByIDAndUser = `-- name: GetTLDRByIDAndUser :one

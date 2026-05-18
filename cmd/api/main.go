@@ -65,6 +65,10 @@ func main() {
 		"DELETE /v1/tldrs/{id}",
 		app.AuthMiddleware(http.HandlerFunc(app.UserDeleteTLDR)),
 	)
+	api.Handle(
+		"DELETE /v1/tldrs",
+		app.AuthMiddleware(http.HandlerFunc(app.UserDeleteTLDRs)),
+	)
 
 	api.Handle(
 		"GET /v1/me",
@@ -84,6 +88,7 @@ func main() {
 	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.AdminGetTLDR))
 	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.AdminUpdateTLDR))
 	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(app.AdminDeleteTLDR))
+	admin.Handle("DELETE /tldrs", http.HandlerFunc(app.AdminDeleteTLDRs))
 
 	admin.Handle("GET /users", http.HandlerFunc(app.AdminGetUsers))
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))

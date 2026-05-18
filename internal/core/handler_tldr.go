@@ -9,7 +9,6 @@ import (
 
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -141,23 +140,12 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(
-			w,
-			r.Context(),
-			http.StatusUnauthorized,
-			"Invalid claims",
-		)
-		return
-	}
-
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
 		t.errorResponse(
 			w,
 			r.Context(),
-			http.StatusInternalServerError,
+			http.StatusUnauthorized,
 			"Failed to parse user ID",
 		)
 		return
@@ -214,23 +202,12 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsKey).(*jwt.RegisteredClaims)
-	if !ok {
-		t.errorResponse(
-			w,
-			r.Context(),
-			http.StatusUnauthorized,
-			"Invalid claims",
-		)
-		return
-	}
-
-	userId, err := uuid.Parse(claims.Subject)
+	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
 		t.errorResponse(
 			w,
 			r.Context(),
-			http.StatusInternalServerError,
+			http.StatusUnauthorized,
 			"Failed to parse user ID",
 		)
 		return
@@ -262,6 +239,71 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
+	userId, err := auth.GetUserID(r.Context())
+	if err != nil {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Failed to parse user ID",
+		)
+		return
+	}
+
+	var ids []uuid.UUID
+	if err := json.NewDecoder(r.Body).Decode(&ids); err != nil {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
+		return
+	}
+
+	res, err := t.Queries.DeleteTLDRsByIdAndUser(
+		r.Context(),
+		database.DeleteTLDRsByIdAndUserParams{
+			UserID: userId,
+			Ids:    ids,
+		})
+	if err != nil {
+		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		t.Logger.Error(
+			"Failed to delete TLDRs",
+			"error",
+			err.Error(),
+			"rows",
+			rowsAffected,
+		)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, struct {
+		Message string
+	}{
+		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
+	})
 }
 
 func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
@@ -433,4 +475,53 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
+	var ids []uuid.UUID
+	if err := json.NewDecoder(r.Body).Decode(&ids); err != nil {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Invalid request body",
+		)
+		return
+	}
+
+	res, err := t.Queries.DeleteTLDRs(r.Context(), ids)
+	if err != nil {
+		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		t.Logger.Error(
+			"Failed to delete TLDRs",
+			"error",
+			err.Error(),
+			"rows",
+			rowsAffected,
+		)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, struct {
+		Message string
+	}{
+		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
+	})
 }
