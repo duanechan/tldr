@@ -60,6 +60,9 @@ WHERE user_id = ?
 DELETE FROM tldrs
 WHERE id IN (sqlc.slice('ids'));
 
+-- name: DeleteAllTLDRs :execresult
+DELETE FROM tldrs;
+
 -- name: DeleteTLDRById :exec
 DELETE FROM tldrs
 WHERE id = ?;

@@ -89,6 +89,7 @@ func main() {
 	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.AdminUpdateTLDR))
 	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(app.AdminDeleteTLDR))
 	admin.Handle("DELETE /tldrs", http.HandlerFunc(app.AdminDeleteTLDRs))
+	admin.Handle("DELETE /tldrs/all", http.HandlerFunc(app.AdminDeleteAllTLDRs))
 
 	admin.Handle("GET /users", http.HandlerFunc(app.AdminGetUsers))
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))

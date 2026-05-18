@@ -525,3 +525,51 @@ func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
 	})
 }
+
+func (t *TLDR) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
+	if t.Config.Environment != "dev" {
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusUnauthorized,
+			"Invalid application environment",
+		)
+		return
+	}
+
+	res, err := t.Queries.DeleteAllTLDRs(r.Context())
+	if err != nil {
+		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		t.Logger.Error(
+			"Failed to delete TLDRs",
+			"error",
+			err.Error(),
+			"rows",
+			rowsAffected,
+		)
+		t.errorResponse(
+			w,
+			r.Context(),
+			http.StatusInternalServerError,
+			"Failed to delete TLDRs",
+		)
+		return
+	}
+
+	t.jsonResponse(w, http.StatusOK, struct {
+		Message string
+	}{
+		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
+	})
+}

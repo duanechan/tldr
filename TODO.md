@@ -18,7 +18,7 @@
   - [x] Users
   - [x] Admin
 - [x] AI-generated titles in TLDR create flow
-- [ ] Dev endpoints in admin (DELETE /tldrs, DELETE /users)
+- [x] Dev endpoints in admin (DELETE /tldrs, DELETE /users)
 - [x] API error handling in /summarize
 - [ ] Flag for sensitive TLDRs
 - [x] Id + CreatedAt to encode PageCursor to Base64 string
