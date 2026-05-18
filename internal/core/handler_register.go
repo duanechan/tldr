@@ -20,11 +20,11 @@ const (
 	minimumPasswordLength = 8
 )
 
-func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
+func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	fieldErrors := []FieldError{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -82,7 +82,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(fieldErrors) > 0 {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -96,7 +96,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		argon2id.DefaultParams,
 	)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -107,7 +107,7 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -116,14 +116,14 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.Queries.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := a.Queries.CreateUser(r.Context(), database.CreateUserParams{
 		ID:       id,
 		Username: cleanedUsername,
 		Password: hashedPassword,
 	})
 	if sqliteErr, ok := err.(*sqlite.Error); ok &&
 		sqliteErr.Code() == sqliteUniqueConstraint {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusConflict,
@@ -133,8 +133,8 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to create user", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to create user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -145,11 +145,11 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, err := auth.CreateJWT(
 		id,
-		t.Config.JWTSecret,
-		t.Config.JWTExpiry,
+		a.Config.JWTSecret,
+		a.Config.JWTExpiry,
 	)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -158,10 +158,10 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := t.insertRefreshToken(r.Context(), user.ID)
+	refreshToken, err := a.insertRefreshToken(r.Context(), user.ID)
 	if err != nil {
-		t.Logger.Info("Failed to create refresh token", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Info("Failed to create refresh token", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -170,15 +170,15 @@ func (t *TLDR) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.setRefreshTokenCookie(w, *refreshToken)
-	t.jsonResponse(
+	a.setRefreshTokenCookie(w, *refreshToken)
+	a.jsonResponse(
 		w,
 		http.StatusCreated,
 		authResponse{AccessToken: accessToken},
 	)
 }
 
-func (t *TLDR) insertRefreshToken(
+func (a *App) insertRefreshToken(
 	ctx context.Context,
 	id uuid.UUID,
 ) (*database.RefreshToken, error) {
@@ -192,13 +192,13 @@ func (t *TLDR) insertRefreshToken(
 		return nil, err
 	}
 
-	refreshToken, err := t.Queries.CreateRefreshToken(
+	refreshToken, err := a.Queries.CreateRefreshToken(
 		ctx,
 		database.CreateRefreshTokenParams{
 			ID:        refreshTokenId,
 			Token:     refreshTokenString,
 			UserID:    id,
-			ExpiresAt: time.Now().Add(t.Config.RefreshExpiry),
+			ExpiresAt: time.Now().Add(a.Config.RefreshExpiry),
 		},
 	)
 	if err != nil {
@@ -208,13 +208,13 @@ func (t *TLDR) insertRefreshToken(
 	return &refreshToken, nil
 }
 
-func (t *TLDR) setRefreshTokenCookie(
+func (a *App) setRefreshTokenCookie(
 	w http.ResponseWriter,
 	refreshToken database.RefreshToken,
 ) {
 	var sameSite http.SameSite
 
-	switch t.Config.Environment {
+	switch a.Config.Environment {
 	case "prod":
 		sameSite = http.SameSiteStrictMode
 	case "dev":
@@ -230,6 +230,6 @@ func (t *TLDR) setRefreshTokenCookie(
 		Expires:  refreshToken.ExpiresAt,
 		HttpOnly: true,
 		SameSite: sameSite,
-		Secure:   t.Config.Environment == "prod",
+		Secure:   a.Config.Environment == "prod",
 	})
 }

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/genai"
 )
 
-type TLDR struct {
+type App struct {
 	mux       *http.ServeMux
 	Handler   http.Handler
 	db        *sql.DB
@@ -54,7 +54,7 @@ const prompt = `
 	}
 	`
 
-func New() (*TLDR, error) {
+func New() (*App, error) {
 	cfg, err := config.New()
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func New() (*TLDR, error) {
 	)
 	mux := http.NewServeMux()
 
-	return &TLDR{
+	return &App{
 		mux:       mux,
 		Handler:   mux,
 		db:        db,
@@ -116,21 +116,21 @@ func New() (*TLDR, error) {
 	}, nil
 }
 
-func (t *TLDR) Handle(pattern string, handler http.Handler) {
-	t.mux.Handle(pattern, handler)
+func (a *App) Handle(pattern string, handler http.Handler) {
+	a.mux.Handle(pattern, handler)
 }
 
-func (t *TLDR) HandleFunc(pattern string, handler http.HandlerFunc) {
-	t.mux.HandleFunc(pattern, handler)
+func (a *App) HandleFunc(pattern string, handler http.HandlerFunc) {
+	a.mux.HandleFunc(pattern, handler)
 }
 
-func (t *TLDR) Use(middleware ...func(http.Handler) http.Handler) {
+func (a *App) Use(middleware ...func(http.Handler) http.Handler) {
 	for _, m := range middleware {
-		t.Handler = m(t.Handler)
+		a.Handler = m(a.Handler)
 	}
 }
 
-func (t *TLDR) CloseDB() {
-	t.Logger.Info("Database connection closed")
-	t.db.Close()
+func (a *App) CloseDB() {
+	a.Logger.Info("Database connection closed")
+	a.db.Close()
 }

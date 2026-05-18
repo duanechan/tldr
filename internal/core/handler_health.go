@@ -5,20 +5,20 @@ import (
 	"time"
 )
 
-func (t *TLDR) Health(w http.ResponseWriter, r *http.Request) {
+func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 	dbConnected := "UP"
-	if err := t.db.Ping(); err != nil {
+	if err := a.db.Ping(); err != nil {
 		dbConnected = "DOWN"
 	}
 
 	modelConnected := "UP"
-	if _, err := t.Client.Models.List(r.Context(), nil); err != nil {
+	if _, err := a.Client.Models.List(r.Context(), nil); err != nil {
 		modelConnected = "DOWN"
 	}
 
-	t.jsonResponse(w, http.StatusOK, HealthResponse{
+	a.jsonResponse(w, http.StatusOK, HealthResponse{
 		Status: "OK",
-		Uptime: time.Since(t.startedAt).Round(time.Second).String(),
+		Uptime: time.Since(a.startedAt).Round(time.Second).String(),
 		Services: Services{
 			Database: dbConnected,
 			Model:    modelConnected,

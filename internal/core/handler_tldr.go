@@ -12,10 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -26,7 +26,7 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -35,7 +35,7 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.Queries.GetTLDRByIDAndUser(
+	tldr, err := a.Queries.GetTLDRByIDAndUser(
 		r.Context(),
 		database.GetTLDRByIDAndUserParams{
 			UserID: userId,
@@ -43,7 +43,7 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusNotFound,
@@ -53,8 +53,8 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get TLDR", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -63,13 +63,13 @@ func (t *TLDR) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldr)
+	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -80,7 +80,7 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
 	if fieldErrors != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -89,7 +89,7 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldrs, err := t.Queries.GetTLDRsByUser(
+	tldrs, err := a.Queries.GetTLDRsByUser(
 		r.Context(),
 		database.GetTLDRsByUserParams{
 			UserID:      userId,
@@ -100,7 +100,7 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
-		t.jsonResponse(
+		a.jsonResponse(
 			w,
 			http.StatusOK,
 			Page[database.GetTLDRsByUserRow]{
@@ -111,8 +111,8 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get TLDRs", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -122,7 +122,7 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) >= len(tldrs) {
-		t.jsonResponse(
+		a.jsonResponse(
 			w,
 			http.StatusOK,
 			Page[database.GetTLDRsByUserRow]{Results: tldrs},
@@ -133,16 +133,16 @@ func (t *TLDR) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	lastItem := tldrs[limit]
 	next := encodeCursor(&lastItem.CreatedAt, lastItem.ID)
 
-	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{
+	a.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsByUserRow]{
 		Results: tldrs[:limit],
 		Next:    next,
 	})
 }
 
-func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -153,7 +153,7 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -164,7 +164,7 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	var updateRequest database.UpdateTLDRTitleParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -176,9 +176,9 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	updateRequest.UserID = userId
 	updateRequest.ID = tldrId
 
-	tldr, err := t.Queries.UpdateTLDRTitle(r.Context(), updateRequest)
+	tldr, err := a.Queries.UpdateTLDRTitle(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusNotFound,
@@ -188,8 +188,8 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to update TLDR", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to update TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -198,13 +198,13 @@ func (t *TLDR) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldr)
+	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -215,7 +215,7 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -224,12 +224,12 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := t.Queries.DeleteTLDR(r.Context(), database.DeleteTLDRParams{
+	if err := a.Queries.DeleteTLDR(r.Context(), database.DeleteTLDRParams{
 		UserID: userId,
 		ID:     tldrId,
 	}); err != nil {
-		t.Logger.Error("Failed to delete TLDR", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to delete TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -238,13 +238,13 @@ func (t *TLDR) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusNoContent, nil)
+	a.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -255,7 +255,7 @@ func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	var ids []uuid.UUID
 	if err := json.NewDecoder(r.Body).Decode(&ids); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -264,15 +264,15 @@ func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := t.Queries.DeleteTLDRsByIdAndUser(
+	res, err := a.Queries.DeleteTLDRsByIdAndUser(
 		r.Context(),
 		database.DeleteTLDRsByIdAndUserParams{
 			UserID: userId,
 			Ids:    ids,
 		})
 	if err != nil {
-		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -283,14 +283,14 @@ func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		t.Logger.Error(
+		a.Logger.Error(
 			"Failed to delete TLDRs",
 			"error",
 			err.Error(),
 			"rows",
 			rowsAffected,
 		)
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -299,17 +299,17 @@ func (t *TLDR) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, struct {
+	a.jsonResponse(w, http.StatusOK, struct {
 		Message string
 	}{
 		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
 	})
 }
 
-func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -318,9 +318,9 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldr, err := t.Queries.GetTLDRById(r.Context(), tldrId)
+	tldr, err := a.Queries.GetTLDRById(r.Context(), tldrId)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusNotFound,
@@ -330,8 +330,8 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get TLDR", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -340,13 +340,13 @@ func (t *TLDR) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldr)
+	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
 	if fieldErrors != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -355,14 +355,14 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tldrs, err := t.Queries.GetTLDRs(r.Context(), database.GetTLDRsParams{
+	tldrs, err := a.Queries.GetTLDRs(r.Context(), database.GetTLDRsParams{
 		CreatedAt:   *createdAt,
 		CreatedAt_2: *createdAt,
 		ID:          id,
 		Limit:       limit + 1,
 	})
 	if errors.Is(err, sql.ErrNoRows) || tldrs == nil {
-		t.jsonResponse(
+		a.jsonResponse(
 			w,
 			http.StatusOK,
 			Page[database.GetTLDRsByUserRow]{
@@ -373,8 +373,8 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get TLDRs", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get TLDRs", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -384,7 +384,7 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) >= len(tldrs) {
-		t.jsonResponse(
+		a.jsonResponse(
 			w,
 			http.StatusOK,
 			Page[database.GetTLDRsRow]{Results: tldrs},
@@ -395,16 +395,16 @@ func (t *TLDR) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	lastItem := tldrs[limit]
 	next := encodeCursor(&lastItem.CreatedAt, lastItem.ID)
 
-	t.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{
+	a.jsonResponse(w, http.StatusOK, Page[database.GetTLDRsRow]{
 		Results: tldrs[:limit],
 		Next:    next,
 	})
 }
 
-func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	var updateRequest database.UpdateTLDRTitleByIdParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -415,7 +415,7 @@ func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -426,9 +426,9 @@ func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 
 	updateRequest.ID = tldrId
 
-	tldr, err := t.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
+	tldr, err := a.Queries.UpdateTLDRTitleById(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusNotFound,
@@ -438,8 +438,8 @@ func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to update TLDR", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to update TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -448,13 +448,13 @@ func (t *TLDR) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, tldr)
+	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
-func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -463,9 +463,9 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = t.Queries.DeleteTLDRById(r.Context(), tldrId); err != nil {
-		t.Logger.Error("Failed to delete TLDR", "error", err.Error())
-		t.errorResponse(
+	if err = a.Queries.DeleteTLDRById(r.Context(), tldrId); err != nil {
+		a.Logger.Error("Failed to delete TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -474,13 +474,13 @@ func (t *TLDR) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusNoContent, nil)
+	a.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 	var ids []uuid.UUID
 	if err := json.NewDecoder(r.Body).Decode(&ids); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -489,10 +489,10 @@ func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := t.Queries.DeleteTLDRs(r.Context(), ids)
+	res, err := a.Queries.DeleteTLDRs(r.Context(), ids)
 	if err != nil {
-		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -503,14 +503,14 @@ func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		t.Logger.Error(
+		a.Logger.Error(
 			"Failed to delete TLDRs",
 			"error",
 			err.Error(),
 			"rows",
 			rowsAffected,
 		)
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -519,16 +519,16 @@ func (t *TLDR) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, struct {
+	a.jsonResponse(w, http.StatusOK, struct {
 		Message string
 	}{
 		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
 	})
 }
 
-func (t *TLDR) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
-	if t.Config.Environment != "dev" {
-		t.errorResponse(
+func (a *App) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
+	if a.Config.Environment != "dev" {
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -537,10 +537,10 @@ func (t *TLDR) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := t.Queries.DeleteAllTLDRs(r.Context())
+	res, err := a.Queries.DeleteAllTLDRs(r.Context())
 	if err != nil {
-		t.Logger.Error("Failed to delete TLDRs", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to delete TLDRs", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -551,14 +551,14 @@ func (t *TLDR) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		t.Logger.Error(
+		a.Logger.Error(
 			"Failed to delete TLDRs",
 			"error",
 			err.Error(),
 			"rows",
 			rowsAffected,
 		)
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -567,7 +567,7 @@ func (t *TLDR) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, struct {
+	a.jsonResponse(w, http.StatusOK, struct {
 		Message string
 	}{
 		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),

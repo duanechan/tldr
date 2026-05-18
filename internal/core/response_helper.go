@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (t *TLDR) errorResponse(
+func (a *App) errorResponse(
 	w http.ResponseWriter,
 	ctx context.Context,
 	code int,
@@ -15,12 +15,12 @@ func (t *TLDR) errorResponse(
 ) {
 	requestId, ok := ctx.Value(requestIdKey).(string)
 	if !ok {
-		t.Logger.Error("Failed to get request ID")
+		a.Logger.Error("Failed to get request ID")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	t.jsonResponse(w, code, ErrorResponse{
+	a.jsonResponse(w, code, ErrorResponse{
 		Code:      code,
 		RequestID: requestId,
 		Message:   message,
@@ -28,7 +28,7 @@ func (t *TLDR) errorResponse(
 	})
 }
 
-func (t *TLDR) jsonResponse(w http.ResponseWriter, code int, payload any) {
+func (a *App) jsonResponse(w http.ResponseWriter, code int, payload any) {
 	if code == http.StatusNoContent {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -38,7 +38,7 @@ func (t *TLDR) jsonResponse(w http.ResponseWriter, code int, payload any) {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		t.Logger.Error("Marshal error:", "error", err.Error())
+		a.Logger.Error("Marshal error:", "error", err.Error())
 		code = http.StatusInternalServerError
 		body = []byte(`{"error":"Something went wrong"}`)
 	}
@@ -46,6 +46,6 @@ func (t *TLDR) jsonResponse(w http.ResponseWriter, code int, payload any) {
 	w.WriteHeader(code)
 
 	if _, err := w.Write(body); err != nil {
-		t.Logger.Error("Write error:", "error", err.Error())
+		a.Logger.Error("Write error:", "error", err.Error())
 	}
 }

@@ -7,11 +7,11 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
-func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
+func (a *App) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := auth.GetBearerToken(r.Header)
 		if err != nil {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusUnauthorized,
@@ -20,9 +20,9 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := auth.ValidateJWT(token, t.Config.JWTSecret)
+		claims, err := auth.ValidateJWT(token, a.Config.JWTSecret)
 		if err != nil {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusUnauthorized,
@@ -33,7 +33,7 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 
 		userId, err := claims.GetSubject()
 		if err != nil {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusUnauthorized,
@@ -45,7 +45,7 @@ func (t *TLDR) AuthMiddleware(next http.Handler) http.Handler {
 		requestId, _ := r.Context().Value(requestIdKey).(string)
 
 		ctx := context.WithValue(r.Context(), auth.ClaimsKey, claims)
-		t.Logger.Info(
+		a.Logger.Info(
 			"Authenticated Request:",
 			"id",
 			requestId,

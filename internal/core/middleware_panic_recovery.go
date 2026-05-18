@@ -5,18 +5,18 @@ import (
 	"runtime/debug"
 )
 
-func (t *TLDR) PanicRecoveryMiddleware(next http.Handler) http.Handler {
+func (a *App) PanicRecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
-				t.Logger.Error(
+				a.Logger.Error(
 					"Server panicked:",
 					"stack",
 					string(debug.Stack()),
 					"value",
 					v,
 				)
-				t.errorResponse(
+				a.errorResponse(
 					w,
 					r.Context(),
 					http.StatusInternalServerError,

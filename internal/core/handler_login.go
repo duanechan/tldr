@@ -11,10 +11,10 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
-func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
+func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -25,7 +25,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 
 	cleanedUsername := strings.TrimSpace(req.Username)
 	if cleanedUsername == "" || strings.TrimSpace(req.Password) == "" {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -34,12 +34,12 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := t.Queries.GetUserCredentialsByUsername(
+	user, err := a.Queries.GetUserCredentialsByUsername(
 		r.Context(),
 		cleanedUsername,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -49,8 +49,8 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -61,7 +61,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 
 	matches, err := argon2id.ComparePasswordAndHash(req.Password, user.Password)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -71,7 +71,7 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !matches {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -82,11 +82,11 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, err := auth.CreateJWT(
 		user.ID,
-		t.Config.JWTSecret,
-		t.Config.JWTExpiry,
+		a.Config.JWTSecret,
+		a.Config.JWTExpiry,
 	)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -95,10 +95,10 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := t.insertRefreshToken(r.Context(), user.ID)
+	refreshToken, err := a.insertRefreshToken(r.Context(), user.ID)
 	if err != nil {
-		t.Logger.Info("Failed to create refresh token", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Info("Failed to create refresh token", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -107,6 +107,6 @@ func (t *TLDR) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.setRefreshTokenCookie(w, *refreshToken)
-	t.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
+	a.setRefreshTokenCookie(w, *refreshToken)
+	a.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
 }

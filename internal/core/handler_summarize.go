@@ -28,11 +28,11 @@ const (
 	maxUploadMemory int64 = 10 << 20
 )
 
-func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
+func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -42,7 +42,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseMultipartForm(maxUploadMemory); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -53,7 +53,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	file, header, err := r.FormFile("document")
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -65,7 +65,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	mimeType := header.Header.Get("Content-Type")
 	if !slices.Contains(allowedFileTypes, mimeType) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -76,7 +76,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -93,31 +93,31 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
-	result, err := t.Client.Models.GenerateContent(
+	result, err := a.Client.Models.GenerateContent(
 		r.Context(),
-		t.Config.APIModel,
+		a.Config.APIModel,
 		contents,
-		t.Model,
+		a.Model,
 	)
 	if err, exists := errors.AsType[genai.APIError](err); exists {
 		switch err.Code {
 		case http.StatusTooManyRequests:
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusTooManyRequests,
 				"Too many requests, try again later",
 			)
 		case http.StatusRequestEntityTooLarge:
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusRequestEntityTooLarge,
 				"File is too large",
 			)
 		default:
-			t.Logger.Error("Failed to summarize text", "error", err.Error())
-			t.errorResponse(
+			a.Logger.Error("Failed to summarize text", "error", err.Error())
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusInternalServerError,
@@ -128,7 +128,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -139,7 +139,7 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 
 	var response SummarizeResponse
 	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -148,9 +148,9 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = t.insertTLDR(r.Context(), userId, response); err != nil {
-		t.Logger.Error("Failed to create TLDR", "error", err.Error())
-		t.errorResponse(
+	if err = a.insertTLDR(r.Context(), userId, response); err != nil {
+		a.Logger.Error("Failed to create TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -160,14 +160,14 @@ func (t *TLDR) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Duration = time.Since(start).Milliseconds()
-	t.jsonResponse(w, http.StatusOK, response)
+	a.jsonResponse(w, http.StatusOK, response)
 }
 
-func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
+func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -178,7 +178,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 
 	var req SummarizeTextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -189,7 +189,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 
 	cleanedText := strings.TrimSpace(req.Text)
 	if cleanedText == "" {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -198,31 +198,31 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := t.Client.Models.GenerateContent(
+	result, err := a.Client.Models.GenerateContent(
 		r.Context(),
-		t.Config.APIModel,
+		a.Config.APIModel,
 		genai.Text(cleanedText),
-		t.Model,
+		a.Model,
 	)
 	if err, exists := errors.AsType[genai.APIError](err); exists {
 		switch err.Code {
 		case http.StatusTooManyRequests:
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusTooManyRequests,
 				"Too many requests, try again later",
 			)
 		case http.StatusRequestEntityTooLarge:
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusRequestEntityTooLarge,
 				"File is too large",
 			)
 		default:
-			t.Logger.Error("Failed to summarize text", "error", err.Error())
-			t.errorResponse(
+			a.Logger.Error("Failed to summarize text", "error", err.Error())
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusInternalServerError,
@@ -233,7 +233,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -244,7 +244,7 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 
 	var response SummarizeResponse
 	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -253,9 +253,9 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = t.insertTLDR(r.Context(), userId, response); err != nil {
-		t.Logger.Error("Failed to create TLDR", "error", err.Error())
-		t.errorResponse(
+	if err = a.insertTLDR(r.Context(), userId, response); err != nil {
+		a.Logger.Error("Failed to create TLDR", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -265,10 +265,10 @@ func (t *TLDR) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Duration = time.Since(start).Milliseconds()
-	t.jsonResponse(w, http.StatusOK, response)
+	a.jsonResponse(w, http.StatusOK, response)
 }
 
-func (t *TLDR) insertTLDR(
+func (a *App) insertTLDR(
 	ctx context.Context,
 	userId uuid.UUID,
 	response SummarizeResponse,
@@ -278,7 +278,7 @@ func (t *TLDR) insertTLDR(
 		return err
 	}
 
-	_, err = t.Queries.CreateTLDR(ctx, database.CreateTLDRParams{
+	_, err = a.Queries.CreateTLDR(ctx, database.CreateTLDRParams{
 		ID:      tldrId,
 		Title:   response.Title,
 		Content: response.Content,

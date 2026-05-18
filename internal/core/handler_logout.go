@@ -4,10 +4,10 @@ import (
 	"net/http"
 )
 
-func (t *TLDR) Logout(w http.ResponseWriter, r *http.Request) {
+func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -16,9 +16,9 @@ func (t *TLDR) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = t.Queries.RevokeRefreshToken(r.Context(), cookie.Value); err != nil {
-		t.Logger.Error("Failed to revoke refresh token", "error", err.Error())
-		t.errorResponse(
+	if err = a.Queries.RevokeRefreshToken(r.Context(), cookie.Value); err != nil {
+		a.Logger.Error("Failed to revoke refresh token", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -27,5 +27,5 @@ func (t *TLDR) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusNoContent, nil)
+	a.jsonResponse(w, http.StatusNoContent, nil)
 }

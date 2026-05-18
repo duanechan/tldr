@@ -6,11 +6,11 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
-func (t *TLDR) AdminMiddleware(next http.Handler) http.Handler {
+func (a *App) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userId, err := auth.GetUserID(r.Context())
 		if err != nil {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusUnauthorized,
@@ -19,8 +19,8 @@ func (t *TLDR) AdminMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if _, err = t.Queries.IsAdmin(r.Context(), userId); err != nil {
-			t.errorResponse(
+		if _, err = a.Queries.IsAdmin(r.Context(), userId); err != nil {
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusForbidden,

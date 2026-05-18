@@ -13,11 +13,11 @@ const (
 	burstLimit        = 5
 )
 
-func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
+func (a *App) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusBadRequest,
@@ -26,16 +26,16 @@ func (t *TLDR) RateLimiterMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		t.mu.Lock()
-		limiter, exists := t.clients[host]
+		a.mu.Lock()
+		limiter, exists := a.clients[host]
 		if !exists {
 			limiter = rate.NewLimiter(rate.Every(rateLimitInterval), burstLimit)
-			t.clients[host] = limiter
+			a.clients[host] = limiter
 		}
-		t.mu.Unlock()
+		a.mu.Unlock()
 
 		if !limiter.Allow() {
-			t.errorResponse(
+			a.errorResponse(
 				w,
 				r.Context(),
 				http.StatusTooManyRequests,

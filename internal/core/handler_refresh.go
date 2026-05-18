@@ -8,10 +8,10 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
-func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
+func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -21,7 +21,7 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cookie.Valid(); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -32,9 +32,9 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	token := cookie.Value
 
-	user, err := t.Queries.GetUserByRefreshToken(r.Context(), token)
+	user, err := a.Queries.GetUserByRefreshToken(r.Context(), token)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -44,8 +44,8 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -56,11 +56,11 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, err := auth.CreateJWT(
 		user.ID,
-		t.Config.JWTSecret,
-		t.Config.JWTExpiry,
+		a.Config.JWTSecret,
+		a.Config.JWTExpiry,
 	)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -69,5 +69,5 @@ func (t *TLDR) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
+	a.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
 }

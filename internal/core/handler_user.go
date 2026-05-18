@@ -14,10 +14,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserGetMe(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -26,13 +26,13 @@ func (t *TLDR) UserGetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.getUser(w, r, userId)
+	a.getUser(w, r, userId)
 }
 
-func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -41,13 +41,13 @@ func (t *TLDR) UserUpdateUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.updateUsername(w, r, userId)
+	a.updateUsername(w, r, userId)
 }
 
-func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
+func (a *App) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -56,13 +56,13 @@ func (t *TLDR) UserUpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.updatePassword(w, r, userId)
+	a.updatePassword(w, r, userId)
 }
 
-func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -71,13 +71,13 @@ func (t *TLDR) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.getUser(w, r, userId)
+	a.getUser(w, r, userId)
 }
 
-func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
 	if fieldErrors != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -86,20 +86,20 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := t.Queries.GetUsers(r.Context(), database.GetUsersParams{
+	users, err := a.Queries.GetUsers(r.Context(), database.GetUsersParams{
 		CreatedAt:   *createdAt,
 		CreatedAt_2: *createdAt,
 		ID:          id,
 		Limit:       limit + 1,
 	})
 	if errors.Is(err, sql.ErrNoRows) || users == nil {
-		t.jsonResponse(w, http.StatusOK, []database.User{})
+		a.jsonResponse(w, http.StatusOK, []database.User{})
 		return
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get users", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get users", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -109,7 +109,7 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if int(limit) >= len(users) {
-		t.jsonResponse(
+		a.jsonResponse(
 			w,
 			http.StatusOK,
 			Page[database.GetUsersRow]{Results: users},
@@ -120,16 +120,16 @@ func (t *TLDR) AdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	lastItem := users[limit]
 	next := encodeCursor(&lastItem.CreatedAt, lastItem.ID)
 
-	t.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
+	a.jsonResponse(w, http.StatusOK, Page[database.GetUsersRow]{
 		Results: users[:limit],
 		Next:    next,
 	})
 }
 
-func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -138,13 +138,13 @@ func (t *TLDR) AdminUpdateUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.updateUsername(w, r, userId)
+	a.updateUsername(w, r, userId)
 }
 
-func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -153,13 +153,13 @@ func (t *TLDR) AdminUpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.updatePassword(w, r, userId)
+	a.updatePassword(w, r, userId)
 }
 
-func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+func (a *App) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -168,9 +168,9 @@ func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = t.Queries.DeleteUser(r.Context(), userId); err != nil {
-		t.Logger.Error("Failed to delete user", "error", err.Error())
-		t.errorResponse(
+	if err = a.Queries.DeleteUser(r.Context(), userId); err != nil {
+		a.Logger.Error("Failed to delete user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -179,12 +179,12 @@ func (t *TLDR) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusNoContent, nil)
+	a.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func (t *TLDR) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
-	if t.Config.Environment != "dev" {
-		t.errorResponse(
+func (a *App) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
+	if a.Config.Environment != "dev" {
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusUnauthorized,
@@ -193,10 +193,10 @@ func (t *TLDR) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := t.Queries.DeleteAllUsers(r.Context())
+	res, err := a.Queries.DeleteAllUsers(r.Context())
 	if err != nil {
-		t.Logger.Error("Failed to delete users", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to delete users", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -207,14 +207,14 @@ func (t *TLDR) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		t.Logger.Error(
+		a.Logger.Error(
 			"Failed to delete users",
 			"error",
 			err.Error(),
 			"rows",
 			rowsAffected,
 		)
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -223,27 +223,27 @@ func (t *TLDR) AdminDeleteAllUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, struct {
+	a.jsonResponse(w, http.StatusOK, struct {
 		Message string
 	}{
 		Message: fmt.Sprintf("Deleted %d users", rowsAffected),
 	})
 }
 
-func (t *TLDR) getUser(
+func (a *App) getUser(
 	w http.ResponseWriter,
 	r *http.Request,
 	userId uuid.UUID,
 ) {
-	user, err := t.Queries.GetUserById(r.Context(), userId)
+	user, err := a.Queries.GetUserById(r.Context(), userId)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
+		a.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
 		return
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to get user", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to get user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -252,17 +252,17 @@ func (t *TLDR) getUser(
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, user)
+	a.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) updateUsername(
+func (a *App) updateUsername(
 	w http.ResponseWriter,
 	r *http.Request,
 	userId uuid.UUID,
 ) {
 	var updateRequest database.UpdateUsernameParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -291,7 +291,7 @@ func (t *TLDR) updateUsername(
 	}
 
 	if fieldError != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -303,9 +303,9 @@ func (t *TLDR) updateUsername(
 
 	updateRequest.Username = cleanedUsername
 
-	user, err := t.Queries.UpdateUsername(r.Context(), updateRequest)
+	user, err := a.Queries.UpdateUsername(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusNotFound,
@@ -315,8 +315,8 @@ func (t *TLDR) updateUsername(
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to update user", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to update user", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -325,17 +325,17 @@ func (t *TLDR) updateUsername(
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, user)
+	a.jsonResponse(w, http.StatusOK, user)
 }
 
-func (t *TLDR) updatePassword(
+func (a *App) updatePassword(
 	w http.ResponseWriter,
 	r *http.Request,
 	userId uuid.UUID,
 ) {
 	var updateRequest database.UpdatePasswordParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -363,7 +363,7 @@ func (t *TLDR) updatePassword(
 	}
 
 	if fieldError != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusBadRequest,
@@ -378,7 +378,7 @@ func (t *TLDR) updatePassword(
 		argon2id.DefaultParams,
 	)
 	if err != nil {
-		t.errorResponse(
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -389,15 +389,15 @@ func (t *TLDR) updatePassword(
 
 	updateRequest.Password = hashedPassword
 
-	user, err := t.Queries.UpdatePassword(r.Context(), updateRequest)
+	user, err := a.Queries.UpdatePassword(r.Context(), updateRequest)
 	if errors.Is(err, sql.ErrNoRows) {
-		t.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
+		a.errorResponse(w, r.Context(), http.StatusNotFound, "User not found")
 		return
 	}
 
 	if err != nil {
-		t.Logger.Error("Failed to update password", "error", err.Error())
-		t.errorResponse(
+		a.Logger.Error("Failed to update password", "error", err.Error())
+		a.errorResponse(
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
@@ -406,5 +406,5 @@ func (t *TLDR) updatePassword(
 		return
 	}
 
-	t.jsonResponse(w, http.StatusOK, user)
+	a.jsonResponse(w, http.StatusOK, user)
 }
