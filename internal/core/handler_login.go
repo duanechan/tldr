@@ -119,5 +119,5 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.setRefreshTokenCookie(w, *refreshToken)
-	a.jsonResponse(w, http.StatusOK, authResponse{AccessToken: accessToken})
+	a.jsonResponse(w, http.StatusOK, accessToken)
 }

@@ -173,11 +173,7 @@ func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.setRefreshTokenCookie(w, *refreshToken)
-	a.jsonResponse(
-		w,
-		http.StatusCreated,
-		authResponse{AccessToken: accessToken},
-	)
+	a.jsonResponse(w, http.StatusCreated, accessToken)
 }
 
 func (a *App) insertRefreshToken(
