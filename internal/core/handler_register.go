@@ -22,6 +22,12 @@ const (
 	sqliteUniqueConstraint = 2067
 )
 
+type registerRequest struct {
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+}
+
 func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	fieldErrors := []FieldError{}
