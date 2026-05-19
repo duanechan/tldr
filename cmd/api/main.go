@@ -37,8 +37,14 @@ func main() {
 		"POST /v1/auth/login",
 		app.RateLimiterMiddleware(http.HandlerFunc(app.Login)),
 	)
-	api.Handle("POST /v1/auth/refresh", http.HandlerFunc(app.Refresh))
-	api.Handle("POST /v1/auth/logout", http.HandlerFunc(app.Logout))
+	api.Handle(
+		"POST /v1/auth/refresh",
+		http.HandlerFunc(app.Refresh),
+	)
+	api.Handle(
+		"POST /v1/auth/logout",
+		http.HandlerFunc(app.Logout),
+	)
 
 	api.Handle(
 		"POST /v1/summarize/file",
@@ -74,11 +80,11 @@ func main() {
 		"GET /v1/me",
 		app.AuthMiddleware(http.HandlerFunc(app.UserGetMe)),
 	)
-	app.Handle(
+	api.Handle(
 		"PATCH /v1/me/change-username",
 		app.AuthMiddleware(http.HandlerFunc(app.UserUpdateUsername)),
 	)
-	app.Handle(
+	api.Handle(
 		"PATCH /v1/me/reset-password",
 		app.AuthMiddleware(http.HandlerFunc(app.UserUpdatePassword)),
 	)
@@ -110,7 +116,6 @@ func main() {
 		),
 	)
 	app.Handle("/api/", http.StripPrefix("/api", api))
-
 	app.HandleFunc("GET /health", app.Health)
 
 	server := &http.Server{
