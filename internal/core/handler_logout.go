@@ -2,6 +2,7 @@ package core
 
 import (
 	"net/http"
+	"time"
 )
 
 func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +27,13 @@ func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "REFRESH_TOKEN",
+		Value:   "",
+		MaxAge:  -1,
+		Expires: time.Unix(0, 0),
+	})
 
 	a.jsonResponse(w, http.StatusNoContent, nil)
 }
