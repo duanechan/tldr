@@ -99,7 +99,7 @@ func main() {
 
 	admin.Handle("GET /users", http.HandlerFunc(app.AdminGetUsers))
 	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))
-	admin.Handle("PATCH /users/{id}", http.HandlerFunc(app.AdminUpdateUsername))
+	admin.Handle("PATCH /users/{id}/change-username", http.HandlerFunc(app.AdminUpdateUsername))
 	admin.Handle(
 		"PATCH /users/{id}/reset-password",
 		http.HandlerFunc(app.AdminUpdatePassword),
