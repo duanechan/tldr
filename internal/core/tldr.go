@@ -54,6 +54,30 @@ const prompt = `
 	Do not ask for more input.
 	`
 
+var Model = &genai.GenerateContentConfig{
+	SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
+	ResponseMIMEType:  "application/json",
+	ResponseJsonSchema: map[string]any{
+		"type":     "object",
+		"required": []string{"title", "content", "flag"},
+		"properties": map[string]any{
+			"title": map[string]any{
+				"type":        "string",
+				"description": "The title of the TLDR.",
+			},
+			"content": map[string]any{
+				"type":        "string",
+				"description": "The summarized content.",
+			},
+			"flag": map[string]any{
+				"type":        "string",
+				"enum":        []string{"Safe", "Mild", "Dangerous"},
+				"description": "Safety level of the content.",
+			},
+		},
+	},
+}
+
 func New() (*App, error) {
 	cfg, err := config.New()
 	if err != nil {
@@ -63,30 +87,6 @@ func New() (*App, error) {
 	db, err := sql.Open("sqlite", "./tldr.db?_pragma=foreign_keys(1)")
 	if err != nil {
 		return nil, err
-	}
-
-	model := &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
-		ResponseMIMEType:  "application/json",
-		ResponseJsonSchema: map[string]any{
-			"type":     "object",
-			"required": []string{"title", "content", "flag"},
-			"properties": map[string]any{
-				"title": map[string]any{
-					"type":        "string",
-					"description": "The title of the TLDR.",
-				},
-				"content": map[string]any{
-					"type":        "string",
-					"description": "The summarized content.",
-				},
-				"flag": map[string]any{
-					"type":        "string",
-					"enum":        []string{"Safe", "Mild", "Dangerous"},
-					"description": "Safety level of the content.",
-				},
-			},
-		},
 	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
@@ -113,7 +113,7 @@ func New() (*App, error) {
 		Queries:   database.New(db),
 		Config:    cfg,
 		Client:    client,
-		Model:     model,
+		Model:     Model,
 		Logger:    logger,
 		startedAt: time.Now(),
 		mu:        &sync.RWMutex{},
