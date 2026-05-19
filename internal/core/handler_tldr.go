@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserGetTLDR returns a user's TLDR from the given "id" path.
 func (a *App) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
@@ -47,7 +48,7 @@ func (a *App) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 			w,
 			r.Context(),
 			http.StatusNotFound,
-			fmt.Sprintf("TLDR with ID: %s not found", tldrId.String()),
+			"TLDR not found",
 		)
 		return
 	}
@@ -58,7 +59,7 @@ func (a *App) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 			w,
 			r.Context(),
 			http.StatusInternalServerError,
-			"Failed to get TLDR with ID",
+			"Failed to get TLDR",
 		)
 		return
 	}
@@ -66,6 +67,7 @@ func (a *App) UserGetTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
+// UserGetTLDRs returns a paginated response of a user's TLDRs.
 func (a *App) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
@@ -139,6 +141,8 @@ func (a *App) UserGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UserUpdateTLDR returns a TLDR with an updated title from the given
+// "id" path.
 func (a *App) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
@@ -201,6 +205,7 @@ func (a *App) UserUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
+// UserDeleteTLDR deletes a TLDR of a user from the given "id" path.
 func (a *App) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
@@ -241,6 +246,7 @@ func (a *App) UserDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusNoContent, nil)
 }
 
+// UserDeleteTLDRs batch deletes TLDRs of a user from a given list of IDs
 func (a *App) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {
@@ -299,13 +305,14 @@ func (a *App) UserDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.jsonResponse(w, http.StatusOK, struct {
-		Message string
-	}{
-		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
-	})
+	a.jsonResponse(
+		w,
+		http.StatusOK,
+		fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
+	)
 }
 
+// AdminGetTLDR returns a TLDR from the given "id" path.
 func (a *App) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -343,6 +350,7 @@ func (a *App) AdminGetTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
+// AdminGetTLDRs returns a paginated response of TLDRs.
 func (a *App) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	createdAt, id, limit, fieldErrors := extractQueryParams(r.URL.Query())
 	if fieldErrors != nil {
@@ -401,6 +409,8 @@ func (a *App) AdminGetTLDRs(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// AdminUpdateTLDR returns a TLDR with an updated title from the given
+// "id" path.
 func (a *App) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	var updateRequest database.UpdateTLDRTitleByIdParams
 	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
@@ -451,6 +461,7 @@ func (a *App) AdminUpdateTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, tldr)
 }
 
+// AdminDeleteTLDR deletes a TLDR from the given "id" path.
 func (a *App) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	tldrId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -477,6 +488,7 @@ func (a *App) AdminDeleteTLDR(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusNoContent, nil)
 }
 
+// AdminDeleteTLDRs batch deletes TLDRs from a given list of IDs
 func (a *App) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 	var ids []uuid.UUID
 	if err := json.NewDecoder(r.Body).Decode(&ids); err != nil {
@@ -526,6 +538,8 @@ func (a *App) AdminDeleteTLDRs(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// AdminDeleteAllTLDRs deletes all TLDRs from the database.
+// Intended only for development.
 func (a *App) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
 	if a.Config.Environment != "dev" {
 		a.errorResponse(
@@ -567,9 +581,9 @@ func (a *App) AdminDeleteAllTLDRs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.jsonResponse(w, http.StatusOK, struct {
-		Message string
-	}{
-		Message: fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
-	})
+	a.jsonResponse(
+		w,
+		http.StatusOK,
+		fmt.Sprintf("Deleted %d TLDRs", rowsAffected),
+	)
 }

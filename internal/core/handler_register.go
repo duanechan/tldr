@@ -28,6 +28,9 @@ type registerRequest struct {
 	ConfirmPassword string `json:"confirmPassword"`
 }
 
+// Register handles new user registration requests by validating user
+// credentials, setting refresh token cookie, and returning an access
+// token.
 func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	fieldErrors := []FieldError{}
@@ -182,6 +185,8 @@ func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusCreated, accessToken)
 }
 
+// insertRefreshToken generates a refresh token, inserts it to the database,
+// and returns it.
 func (a *App) insertRefreshToken(
 	ctx context.Context,
 	id uuid.UUID,
@@ -212,6 +217,7 @@ func (a *App) insertRefreshToken(
 	return &refreshToken, nil
 }
 
+// setRefreshTokenCookie sets the "REFRESH_TOKEN" cookie.
 func (a *App) setRefreshTokenCookie(
 	w http.ResponseWriter,
 	refreshToken database.RefreshToken,

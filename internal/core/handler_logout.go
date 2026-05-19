@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// Logout handles logout requests by revoking the refresh token attached
+// in the cookie, and clears it.
 func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {

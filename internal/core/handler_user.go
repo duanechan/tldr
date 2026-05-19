@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserGetMe returns the authenticated user.
 func (a *App) UserGetMe(w http.ResponseWriter, r *http.Request) {
 	userId, err := auth.GetUserID(r.Context())
 	if err != nil {

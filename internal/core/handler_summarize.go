@@ -39,6 +39,7 @@ type SummarizeTextRequest struct {
 	Text string `json:"text"`
 }
 
+// SummarizeFile returns a TLDR of a file.
 func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userId, err := auth.GetUserID(r.Context())
@@ -174,6 +175,7 @@ func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, response)
 }
 
+// SummarizeText returns a TLDR of a text.
 func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userId, err := auth.GetUserID(r.Context())
@@ -279,6 +281,8 @@ func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	a.jsonResponse(w, http.StatusOK, response)
 }
 
+// insertTLDR generates a random UUID for the TLDR, and inserts it based on
+// the response.
 func (a *App) insertTLDR(
 	ctx context.Context,
 	userId uuid.UUID,

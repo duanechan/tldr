@@ -24,6 +24,8 @@
 - [x] Id + CreatedAt to encode PageCursor to Base64 string
 - [x] Refactor code to stay within 80-char line limit
 - [ ] Documentation
+  - [ ] README.md
+  - [ ] Comments
 - [x] Testing
   - [x] config
   - [x] auth

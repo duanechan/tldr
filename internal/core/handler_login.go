@@ -16,6 +16,8 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
+// Login validates user credentials, sets a refresh token cookie,
+// and returns an access token.
 func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

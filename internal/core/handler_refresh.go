@@ -8,6 +8,8 @@ import (
 	"github.com/duanechan/tldr/internal/auth"
 )
 
+// Refresh returns a new access token by validating the refresh token
+// attached in the cookie.
 func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("REFRESH_TOKEN")
 	if err != nil {

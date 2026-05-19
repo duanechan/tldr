@@ -16,6 +16,7 @@ type healthResponse struct {
 	Services services `json:"services"`
 }
 
+// Health returns the status of the application & its services.
 func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 	dbConnected := "UP"
 	if err := a.db.Ping(); err != nil {
