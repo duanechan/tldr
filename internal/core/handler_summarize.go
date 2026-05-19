@@ -28,6 +28,17 @@ const (
 	maxUploadMemory int64 = 10 << 20
 )
 
+type SummarizeResponse struct {
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Flag     string `json:"flag"`
+	Duration int64  `json:"duration,omitempty"`
+}
+
+type SummarizeTextRequest struct {
+	Text string `json:"text"`
+}
+
 func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userId, err := auth.GetUserID(r.Context())

@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+type services struct {
+	Database string `json:"database"`
+	Model    string `json:"model"`
+}
+
+type healthResponse struct {
+	Status   string   `json:"status"`
+	Uptime   string   `json:"uptime"`
+	Services services `json:"services"`
+}
+
 func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 	dbConnected := "UP"
 	if err := a.db.Ping(); err != nil {
@@ -16,10 +27,10 @@ func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 		modelConnected = "DOWN"
 	}
 
-	a.jsonResponse(w, http.StatusOK, HealthResponse{
+	a.jsonResponse(w, http.StatusOK, healthResponse{
 		Status: "OK",
 		Uptime: time.Since(a.startedAt).Round(time.Second).String(),
-		Services: Services{
+		Services: services{
 			Database: dbConnected,
 			Model:    modelConnected,
 		},

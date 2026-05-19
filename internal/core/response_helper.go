@@ -6,6 +6,18 @@ import (
 	"net/http"
 )
 
+type ErrorResponse struct {
+	Code      int          `json:"code"`
+	RequestID string       `json:"request_id"`
+	Message   string       `json:"message,omitempty"`
+	Errors    []FieldError `json:"errors,omitempty"`
+}
+
+type FieldError struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
 func (a *App) errorResponse(
 	w http.ResponseWriter,
 	ctx context.Context,

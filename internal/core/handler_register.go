@@ -18,6 +18,8 @@ import (
 const (
 	minimumUsernameLength = 3
 	minimumPasswordLength = 8
+
+	sqliteUniqueConstraint = 2067
 )
 
 func (a *App) Register(w http.ResponseWriter, r *http.Request) {
