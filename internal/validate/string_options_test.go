@@ -104,13 +104,13 @@ func TestMin(t *testing.T) {
 		},
 		{
 			wantErr: false,
-			name:    "Contains whitespace but exeeds minimum",
+			name:    "Contains whitespace but exceeds minimum",
 			input:   " hello ",
 		},
 		{
 			wantErr: true,
 			name:    "Contains whitespace but precedes minimum",
-			input:   " 123 ",
+			input:   "a ",
 		},
 	}
 
@@ -162,7 +162,7 @@ func TestMax(t *testing.T) {
 		{
 			wantErr: false,
 			name:    "Contains whitespace but precedes maximum",
-			input:   " 12345 ",
+			input:   " 123 ",
 		},
 	}
 

@@ -3,7 +3,6 @@ package validate
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
 
 type stringOption func(string) error
@@ -23,8 +22,7 @@ func Range(min, max int) stringOption {
 	}
 
 	return func(s string) error {
-		cleaned := strings.TrimSpace(s)
-		length := len(cleaned)
+		length := len(s)
 
 		if length < min || length > max {
 			return fmt.Errorf(
