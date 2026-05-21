@@ -47,8 +47,7 @@ func Min(min int) stringOption {
 	}
 
 	return func(s string) error {
-		cleaned := strings.TrimSpace(s)
-		length := len(cleaned)
+		length := len(s)
 
 		if length < min {
 			return fmt.Errorf(
@@ -70,8 +69,7 @@ func Max(max int) stringOption {
 	}
 
 	return func(s string) error {
-		cleaned := strings.TrimSpace(s)
-		length := len(cleaned)
+		length := len(s)
 
 		if length > max {
 			return fmt.Errorf(

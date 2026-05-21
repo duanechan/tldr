@@ -207,7 +207,7 @@ func TestNotEmpty(t *testing.T) {
 			input:   "",
 		},
 		{
-			wantErr: true,
+			wantErr: false,
 			name:    "String with only whitespace",
 			input:   "    ",
 		},
