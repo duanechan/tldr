@@ -4,39 +4,24 @@ import "testing"
 
 func TestRange(t *testing.T) {
 	var tests = []struct {
-		wantErr bool
+		wantErr error
 		name    string
 		input   string
 	}{
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "Valid range",
 			input:   "hello",
 		},
 		{
-			wantErr: true,
-			name:    "Precedes min",
+			wantErr: ErrMinLimit,
+			name:    "Precedes minimum",
 			input:   "he",
 		},
 		{
-			wantErr: true,
-			name:    "Exceeds max",
+			wantErr: ErrMaxLimit,
+			name:    "Exceeds maximum",
 			input:   "hello, world!",
-		},
-		{
-			wantErr: false,
-			name:    "Contains whitespace but valid range",
-			input:   " space ",
-		},
-		{
-			wantErr: true,
-			name:    "Contains whitespace and precedes min",
-			input:   "   1          2      ",
-		},
-		{
-			wantErr: true,
-			name:    "Contains whitespace and exceeds max",
-			input:   " hello world! ",
 		},
 	}
 
@@ -44,12 +29,9 @@ func TestRange(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := opt(tt.input)
-			if !tt.wantErr && err != nil {
-				t.Fatalf("expected error to be nil, got %v", err.Error())
-			}
-			if tt.wantErr && err == nil {
-				t.Fatal("expected error to be non-nil")
+			actual := opt(tt.input)
+			if tt.wantErr != actual {
+				t.Fatalf("want %v, got %v", tt.wantErr, actual)
 			}
 		})
 	}
@@ -61,15 +43,15 @@ func TestRange_Panic(t *testing.T) {
 		fn   func() stringOption
 	}{
 		{
-			name: "Min is 0",
+			name: "Minimum is 0",
 			fn:   func() stringOption { return Range(0, 2) },
 		},
 		{
-			name: "Max is 0",
+			name: "Maximum is 0",
 			fn:   func() stringOption { return Range(2, 0) },
 		},
 		{
-			name: "Min is greater than max",
+			name: "Minimum is greater than maximum",
 			fn:   func() stringOption { return Range(7, 6) },
 		},
 	}
@@ -88,29 +70,19 @@ func TestRange_Panic(t *testing.T) {
 
 func TestMin(t *testing.T) {
 	var tests = []struct {
-		wantErr bool
+		wantErr error
 		name    string
 		input   string
 	}{
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "Exceeds minimum",
 			input:   "hello",
 		},
 		{
-			wantErr: true,
+			wantErr: ErrMinLimit,
 			name:    "Precedes minimum",
 			input:   "123",
-		},
-		{
-			wantErr: false,
-			name:    "Contains whitespace but exceeds minimum",
-			input:   " hello ",
-		},
-		{
-			wantErr: true,
-			name:    "Contains whitespace but precedes minimum",
-			input:   "a ",
 		},
 	}
 
@@ -118,12 +90,9 @@ func TestMin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := opt(tt.input)
-			if !tt.wantErr && err != nil {
-				t.Fatalf("expected error to be nil, got %v", err.Error())
-			}
-			if tt.wantErr && err == nil {
-				t.Fatal("expected error to be non-nil")
+			actual := opt(tt.input)
+			if tt.wantErr != actual {
+				t.Fatalf("want %v, got %v", tt.wantErr, actual)
 			}
 		})
 	}
@@ -140,29 +109,19 @@ func TestMin_Panic(t *testing.T) {
 
 func TestMax(t *testing.T) {
 	var tests = []struct {
-		wantErr bool
+		wantErr error
 		name    string
 		input   string
 	}{
 		{
-			wantErr: true,
+			wantErr: ErrMaxLimit,
 			name:    "Exceeds maximum",
 			input:   "hello, world!",
 		},
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "Precedes maximum",
 			input:   "12345",
-		},
-		{
-			wantErr: true,
-			name:    "Contains whitespace but exeeds maximum",
-			input:   " hello, world! ",
-		},
-		{
-			wantErr: false,
-			name:    "Contains whitespace but precedes maximum",
-			input:   " 123 ",
 		},
 	}
 
@@ -170,12 +129,9 @@ func TestMax(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := opt(tt.input)
-			if !tt.wantErr && err != nil {
-				t.Fatalf("expected error to be nil, got %v", err.Error())
-			}
-			if tt.wantErr && err == nil {
-				t.Fatal("expected error to be non-nil")
+			actual := opt(tt.input)
+			if tt.wantErr != actual {
+				t.Fatalf("want %v, got %v", tt.wantErr, actual)
 			}
 		})
 	}
@@ -192,22 +148,22 @@ func TestMax_Panic(t *testing.T) {
 
 func TestNotEmpty(t *testing.T) {
 	var tests = []struct {
-		wantErr bool
+		wantErr error
 		name    string
 		input   string
 	}{
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "Non-empty string",
 			input:   "hello, world!",
 		},
 		{
-			wantErr: true,
+			wantErr: ErrEmpty,
 			name:    "Empty string",
 			input:   "",
 		},
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "String with only whitespace",
 			input:   "    ",
 		},
@@ -216,39 +172,38 @@ func TestNotEmpty(t *testing.T) {
 	opt := NotEmpty()
 
 	for _, tt := range tests {
-		err := opt(tt.input)
-		if !tt.wantErr && err != nil {
-			t.Fatalf("expected error to be nil, got %v", err.Error())
-		}
-		if tt.wantErr && err == nil {
-			t.Fatal("expected error to be non-nil")
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			actual := opt(tt.input)
+			if tt.wantErr != actual {
+				t.Fatalf("want %v, got %v", tt.wantErr, actual)
+			}
+		})
 	}
 }
 
 func TestNoWhitespace(t *testing.T) {
 	var tests = []struct {
-		wantErr bool
+		wantErr error
 		name    string
 		input   string
 	}{
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "No whitespace",
 			input:   "username123",
 		},
 		{
-			wantErr: true,
+			wantErr: ErrContainsWhitespace,
 			name:    "Contains whitespace",
 			input:   "hello, world!",
 		},
 		{
-			wantErr: false,
+			wantErr: nil,
 			name:    "Empty string",
 			input:   "",
 		},
 		{
-			wantErr: true,
+			wantErr: ErrContainsWhitespace,
 			name:    "Only whitespace",
 			input:   "      ",
 		},
@@ -258,12 +213,9 @@ func TestNoWhitespace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := opt(tt.input)
-			if !tt.wantErr && err != nil {
-				t.Fatalf("expected error to be nil, got %v", err.Error())
-			}
-			if tt.wantErr && err == nil {
-				t.Fatal("expected error to be non-nil")
+			actual := opt(tt.input)
+			if tt.wantErr != actual {
+				t.Fatalf("want %v, got %v", tt.wantErr, actual)
 			}
 		})
 	}

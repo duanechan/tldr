@@ -1,8 +1,6 @@
 package validate
 
 import (
-	"errors"
-	"fmt"
 	"regexp"
 )
 
@@ -29,13 +27,12 @@ func Range(min, max int) stringOption {
 	return func(s string) error {
 		length := len(s)
 
-		if length < min || length > max {
-			return fmt.Errorf(
-				"string length (%d) must be between %d and %d characters long",
-				length,
-				min,
-				max,
-			)
+		if length < min {
+			return ErrMinLimit
+		}
+
+		if length > max {
+			return ErrMaxLimit
 		}
 
 		return nil
@@ -50,14 +47,8 @@ func Min(min int) stringOption {
 	}
 
 	return func(s string) error {
-		length := len(s)
-
-		if length < min {
-			return fmt.Errorf(
-				"string length (%d) must be at least %d characters long",
-				length,
-				min,
-			)
+		if len(s) < min {
+			return ErrMinLimit
 		}
 
 		return nil
@@ -72,14 +63,8 @@ func Max(max int) stringOption {
 	}
 
 	return func(s string) error {
-		length := len(s)
-
-		if length > max {
-			return fmt.Errorf(
-				"string length (%d) must be at most %d characters long",
-				length,
-				max,
-			)
+		if len(s) > max {
+			return ErrMaxLimit
 		}
 
 		return nil
@@ -90,7 +75,7 @@ func Max(max int) stringOption {
 func NotEmpty() stringOption {
 	return func(s string) error {
 		if len(s) == 0 {
-			return errors.New("string must be non-empty")
+			return ErrEmpty
 		}
 
 		return nil
@@ -101,7 +86,7 @@ func NotEmpty() stringOption {
 func NoWhitespace() stringOption {
 	return func(s string) error {
 		if whitespaceRegex.MatchString(s) {
-			return errors.New("string must contain no whitespace")
+			return ErrContainsWhitespace
 		}
 
 		return nil
