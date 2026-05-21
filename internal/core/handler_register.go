@@ -227,8 +227,6 @@ func (a *App) setRefreshTokenCookie(
 	switch a.Config.Environment {
 	case "prod":
 		sameSite = http.SameSiteStrictMode
-	case "dev":
-		sameSite = http.SameSiteNoneMode
 	default:
 		sameSite = http.SameSiteLaxMode
 	}
