@@ -90,22 +90,19 @@ func main() {
 	)
 
 	admin := http.NewServeMux()
-	admin.Handle("GET /tldrs", http.HandlerFunc(app.AdminGetTLDRs))
-	admin.Handle("GET /tldrs/{id}", http.HandlerFunc(app.AdminGetTLDR))
-	admin.Handle("PATCH /tldrs/{id}", http.HandlerFunc(app.AdminUpdateTLDR))
-	admin.Handle("DELETE /tldrs/{id}", http.HandlerFunc(app.AdminDeleteTLDR))
-	admin.Handle("DELETE /tldrs", http.HandlerFunc(app.AdminDeleteTLDRs))
-	admin.Handle("DELETE /tldrs/all", http.HandlerFunc(app.AdminDeleteAllTLDRs))
+	admin.HandleFunc("GET /tldrs", app.AdminGetTLDRs)
+	admin.HandleFunc("GET /tldrs/{id}", app.AdminGetTLDR)
+	admin.HandleFunc("PATCH /tldrs/{id}", app.AdminUpdateTLDR)
+	admin.HandleFunc("DELETE /tldrs/{id}", app.AdminDeleteTLDR)
+	admin.HandleFunc("DELETE /tldrs", app.AdminDeleteTLDRs)
+	admin.HandleFunc("DELETE /tldrs/all", app.AdminDeleteAllTLDRs)
 
-	admin.Handle("GET /users", http.HandlerFunc(app.AdminGetUsers))
-	admin.Handle("GET /users/{id}", http.HandlerFunc(app.AdminGetUser))
-	admin.Handle("PATCH /users/{id}/change-username", http.HandlerFunc(app.AdminUpdateUsername))
-	admin.Handle(
-		"PATCH /users/{id}/reset-password",
-		http.HandlerFunc(app.AdminUpdatePassword),
-	)
-	admin.Handle("DELETE /users/{id}", http.HandlerFunc(app.AdminDeleteUser))
-	admin.Handle("DELETE /users/all", http.HandlerFunc(app.AdminDeleteAllUsers))
+	admin.HandleFunc("GET /users", app.AdminGetUsers)
+	admin.HandleFunc("GET /users/{id}", app.AdminGetUser)
+	admin.HandleFunc("PATCH /users/{id}/change-username", app.AdminUpdateUsername)
+	admin.HandleFunc("PATCH /users/{id}/reset-password", app.AdminUpdatePassword)
+	admin.HandleFunc("DELETE /users/{id}", app.AdminDeleteUser)
+	admin.HandleFunc("DELETE /users/all", app.AdminDeleteAllUsers)
 
 	app.Handle("/", http.FileServer(http.Dir("web/dist")))
 	app.Handle(
