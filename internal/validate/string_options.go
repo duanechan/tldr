@@ -23,9 +23,13 @@ func Range(min, max int) stringOption {
 	}
 
 	return func(s string) error {
-		if len(s) < min || len(s) > max {
+		cleaned := strings.TrimSpace(s)
+		length := len(cleaned)
+
+		if length < min || length > max {
 			return fmt.Errorf(
-				"must be between %d to %d characters long",
+				"string length (%d) must be between %d and %d characters long",
+				length,
 				min,
 				max,
 			)
@@ -43,9 +47,13 @@ func Min(min int) stringOption {
 	}
 
 	return func(s string) error {
-		if len(s) < min {
+		cleaned := strings.TrimSpace(s)
+		length := len(cleaned)
+
+		if length < min {
 			return fmt.Errorf(
-				"must be at least %d characters long",
+				"string length (%d) must be at least %d characters long",
+				length,
 				min,
 			)
 		}
@@ -62,9 +70,13 @@ func Max(max int) stringOption {
 	}
 
 	return func(s string) error {
-		if len(s) > max {
+		cleaned := strings.TrimSpace(s)
+		length := len(cleaned)
+
+		if length > max {
 			return fmt.Errorf(
-				"must be at most %d characters long",
+				"string length (%d) must be at most %d characters long",
+				length,
 				max,
 			)
 		}
@@ -77,7 +89,7 @@ func Max(max int) stringOption {
 func NotEmpty() stringOption {
 	return func(s string) error {
 		if strings.TrimSpace(s) == "" {
-			return errors.New("must be non-empty")
+			return errors.New("string must be non-empty")
 		}
 
 		return nil
