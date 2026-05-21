@@ -88,7 +88,7 @@ func Max(max int) stringOption {
 // NotEmpty returns an option that checks if a string is non-empty.
 func NotEmpty() stringOption {
 	return func(s string) error {
-		if strings.TrimSpace(s) == "" {
+		if len(s) == 0 {
 			return errors.New("string must be non-empty")
 		}
 
