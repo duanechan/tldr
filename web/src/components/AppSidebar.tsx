@@ -1,3 +1,4 @@
+import { TokenKey } from "@/lib/constants";
 import { HouseIcon, SignOutIcon } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import {
@@ -11,7 +12,7 @@ import {
 
 export function AppSidebar() {
   function handleLogout() {
-    localStorage.removeItem("ACCESS_TOKEN");
+    localStorage.removeItem(TokenKey);
   }
 
   return (

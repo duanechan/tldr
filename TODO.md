@@ -43,4 +43,7 @@ Plans to consider or implement in the future, if the app ever grows.
 
 ## **Frontend**
 
-Can start working after backend is polished.
+- [ ] Login
+- [ ] Register
+- [ ] TL;DRs in sidebar
+- [ ] Admin side
