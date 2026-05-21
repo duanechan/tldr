@@ -225,3 +225,46 @@ func TestNotEmpty(t *testing.T) {
 		}
 	}
 }
+
+func TestNoWhitespace(t *testing.T) {
+	var tests = []struct {
+		wantErr bool
+		name    string
+		input   string
+	}{
+		{
+			wantErr: false,
+			name:    "No whitespace",
+			input:   "username123",
+		},
+		{
+			wantErr: true,
+			name:    "Contains whitespace",
+			input:   "hello, world!",
+		},
+		{
+			wantErr: false,
+			name:    "Empty string",
+			input:   "",
+		},
+		{
+			wantErr: true,
+			name:    "Only whitespace",
+			input:   "      ",
+		},
+	}
+
+	opt := NoWhitespace()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := opt(tt.input)
+			if !tt.wantErr && err != nil {
+				t.Fatalf("expected error to be nil, got %v", err.Error())
+			}
+			if tt.wantErr && err == nil {
+				t.Fatal("expected error to be non-nil")
+			}
+		})
+	}
+}

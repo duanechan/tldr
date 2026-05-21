@@ -3,9 +3,14 @@ package validate
 import (
 	"errors"
 	"fmt"
+	"regexp"
 )
 
 type stringOption func(string) error
+
+var (
+	whitespaceRegex = regexp.MustCompile(`\s`)
+)
 
 // Range returns an option that checks if a string is within a range.
 // Panics, if min/max is lesser than or equal to 0, or if min is greater
@@ -86,6 +91,17 @@ func NotEmpty() stringOption {
 	return func(s string) error {
 		if len(s) == 0 {
 			return errors.New("string must be non-empty")
+		}
+
+		return nil
+	}
+}
+
+// NoWhitespace returns an option that checks if a string contains whitespace.
+func NoWhitespace() stringOption {
+	return func(s string) error {
+		if whitespaceRegex.MatchString(s) {
+			return errors.New("string must contain no whitespace")
 		}
 
 		return nil
