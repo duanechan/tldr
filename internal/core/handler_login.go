@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
+	"github.com/duanechan/tldr/internal/validate"
 )
 
 type loginRequest struct {
@@ -30,8 +30,25 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cleanedUsername := strings.TrimSpace(req.Username)
-	if cleanedUsername == "" || strings.TrimSpace(req.Password) == "" {
+	username, err := validate.String(
+		req.Username,
+		validate.NotEmpty(),
+	)
+	if err != nil {
+		a.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Username/password is required",
+		)
+		return
+	}
+
+	password, err := validate.String(
+		req.Password,
+		validate.NotEmpty(),
+	)
+	if err != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
@@ -43,7 +60,7 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := a.Queries.GetUserCredentialsByUsername(
 		r.Context(),
-		cleanedUsername,
+		username,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		a.errorResponse(
@@ -66,7 +83,7 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	matches, err := argon2id.ComparePasswordAndHash(req.Password, user.Password)
+	matches, err := argon2id.ComparePasswordAndHash(password, user.Password)
 	if err != nil {
 		a.errorResponse(
 			w,
