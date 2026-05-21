@@ -9,7 +9,7 @@
 - [x] User routes
   - [x] PATCH /change-username <!--Username-->
   - [x] PATCH /reset-password
-- [ ] Initial admin seed script
+- [x] Initial admin seed script
 - [ ] Admin deletion
 - [x] Pagination
   - [x] TLDRs
