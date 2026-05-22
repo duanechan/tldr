@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
+	"github.com/duanechan/tldr/internal/validate"
 	"github.com/google/uuid"
 	"modernc.org/sqlite"
 )
@@ -44,52 +44,69 @@ func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cleanedUsername := strings.TrimSpace(req.Username)
-	if cleanedUsername == "" {
-		fieldErrors = append(
-			fieldErrors,
-			FieldError{Field: "username", Message: "Username is required"},
-		)
-	} else if len(cleanedUsername) < minimumUsernameLength {
-		fieldErrors = append(
-			fieldErrors,
-			FieldError{
-				Field: "username",
-				Message: fmt.Sprintf(
-					"Username must be %d characters long",
-					minimumUsernameLength,
-				),
-			},
-		)
+	username, errs := validate.String(
+		req.Username,
+		validate.Min(minimumUsernameLength),
+		validate.NoWhitespace(),
+	)
+	for _, err := range errs {
+		switch err {
+		case validate.ErrMinLimit:
+			fieldErrors = append(
+				fieldErrors,
+				FieldError{
+					Field: "username",
+					Message: fmt.Sprintf(
+						"Username must be %d characters long",
+						minimumUsernameLength,
+					),
+				},
+			)
+		case validate.ErrContainsWhitespace:
+			fieldErrors = append(
+				fieldErrors,
+				FieldError{
+					Field:   "username",
+					Message: "Username must not contain whitespace.",
+				},
+			)
+		default:
+			fieldErrors = append(
+				fieldErrors,
+				FieldError{
+					Field:   "username",
+					Message: "Unknown validation error.",
+				},
+			)
+		}
 	}
 
-	if strings.TrimSpace(req.Password) == "" {
-		fieldErrors = append(
-			fieldErrors,
-			FieldError{
-				Field:   "password",
-				Message: "Password is required",
-			},
-		)
-	} else if len(req.Password) < minimumPasswordLength {
-		fieldErrors = append(
-			fieldErrors,
-			FieldError{
-				Field: "password",
-				Message: fmt.Sprintf(
-					"Password must be %d characters long",
-					minimumPasswordLength,
-				),
-			},
-		)
-	} else if req.Password != req.ConfirmPassword {
-		fieldErrors = append(
-			fieldErrors,
-			FieldError{
-				Field:   "password",
-				Message: "Passwords do not match",
-			},
-		)
+	password, errs := validate.String(
+		req.Password,
+		validate.Min(minimumPasswordLength),
+	)
+	for _, err := range errs {
+		switch err {
+		case validate.ErrMinLimit:
+			fieldErrors = append(
+				fieldErrors,
+				FieldError{
+					Field: "password",
+					Message: fmt.Sprintf(
+						"Password must be %d characters long",
+						minimumPasswordLength,
+					),
+				},
+			)
+		default:
+			fieldErrors = append(
+				fieldErrors,
+				FieldError{
+					Field:   "password",
+					Message: "Unknown validation error.",
+				},
+			)
+		}
 	}
 
 	if len(fieldErrors) > 0 {
@@ -102,8 +119,26 @@ func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if password != req.ConfirmPassword {
+		fieldErrors = append(
+			fieldErrors,
+			FieldError{
+				Field:   "password",
+				Message: "Passwords do not match",
+			},
+		)
+		a.errorResponse(
+			w,
+			r.Context(),
+			http.StatusBadRequest,
+			"Failed to validate credentials",
+			fieldErrors...,
+		)
+		return
+	}
+
 	hashedPassword, err := argon2id.CreateHash(
-		req.Password,
+		password,
 		argon2id.DefaultParams,
 	)
 	if err != nil {
@@ -129,7 +164,7 @@ func (a *App) Register(w http.ResponseWriter, r *http.Request) {
 
 	user, err := a.Queries.CreateUser(r.Context(), database.CreateUserParams{
 		ID:       id,
-		Username: cleanedUsername,
+		Username: username,
 		Password: hashedPassword,
 	})
 	if sqliteErr, ok := err.(*sqlite.Error); ok &&
