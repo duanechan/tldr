@@ -29,6 +29,8 @@
 - [x] Testing
   - [x] config
   - [x] auth
+- [x] Refactor validate.String to return multiple errors
+- [ ] Add validate.String to register handler  
 - [ ] Integration tests
 
 ### **Future**

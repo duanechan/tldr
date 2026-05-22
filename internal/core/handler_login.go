@@ -30,11 +30,11 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := validate.String(
+	username, errs := validate.String(
 		req.Username,
 		validate.NotEmpty(),
 	)
-	if err != nil {
+	if errs != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
@@ -44,11 +44,11 @@ func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := validate.String(
+	password, errs := validate.String(
 		req.Password,
 		validate.NotEmpty(),
 	)
-	if err != nil {
+	if errs != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
