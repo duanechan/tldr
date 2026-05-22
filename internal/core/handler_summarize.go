@@ -7,11 +7,11 @@ import (
 	"io"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/duanechan/tldr/internal/auth"
 	"github.com/duanechan/tldr/internal/database"
+	"github.com/duanechan/tldr/internal/validate"
 	"github.com/google/uuid"
 	"google.golang.org/genai"
 )
@@ -33,10 +33,6 @@ type SummarizeResponse struct {
 	Content  string `json:"content"`
 	Flag     string `json:"flag"`
 	Duration int64  `json:"duration,omitempty"`
-}
-
-type SummarizeTextRequest struct {
-	Text string `json:"text"`
 }
 
 // SummarizeFile returns a TLDR of a file.
@@ -189,8 +185,8 @@ func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req SummarizeTextRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var text string
+	if err := json.NewDecoder(r.Body).Decode(&text); err != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
@@ -200,8 +196,8 @@ func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cleanedText := strings.TrimSpace(req.Text)
-	if cleanedText == "" {
+	text, errs := validate.String(text, validate.NotEmpty())
+	if errs != nil {
 		a.errorResponse(
 			w,
 			r.Context(),
@@ -214,7 +210,7 @@ func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 	result, err := a.Client.Models.GenerateContent(
 		r.Context(),
 		a.Config.APIModel,
-		genai.Text(cleanedText),
+		genai.Text(text),
 		a.Model,
 	)
 	if err, exists := errors.AsType[genai.APIError](err); exists {
