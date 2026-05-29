@@ -42,6 +42,7 @@ Plans to consider or implement in the future, if the app ever grows.
 - Role-Based Access Control
 - Migrate to PostgreSQL
 - TLDR Sharing (Public, Private, Shared)
+- Migrate to OAuth2
 
 ## **Frontend**
 
