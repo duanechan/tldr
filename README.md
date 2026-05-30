@@ -1,14 +1,14 @@
-# **TL;DR**
+# **📝 Tilder: Text, Inexplicably Long, Devolved into Efficient Reading**
 
-A file/text summarizer web app & API written in Go powered by Gemini. Supports
+A file/text summarizer web app & API written in Go & Svelte, powered by Gemini. Supports
 JWT authentication, cursor-based pagination, and file summarization for PDF
 and plain text formats.
 
-## Getting Started
+## 🚀 Getting Started
 
 *WIP*
 
-## Environment Variables
+## ⚙️ Environment Variables
 
 *WIP*
 
@@ -16,7 +16,7 @@ and plain text formats.
 
 *WIP*
 
-## **Endpoints**
+## 🔌 **Endpoints**
 
 ### **API:** `/api/v1`
 
