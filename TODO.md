@@ -46,7 +46,7 @@ Plans to consider or implement in the future, if the app ever grows.
 
 ## **Frontend**
 
-- [ ] Login
-- [ ] Register
+- [x] Login
+- [x] Register
 - [ ] TL;DRs in sidebar
 - [ ] Admin side

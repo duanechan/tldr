@@ -147,7 +147,7 @@
             class="w-full cursor-pointer"
             variant={isLoading ? "ghost" : "default"}
             disabled={isLoading}
-            onclick={() => handleLogin()}
+            onclick={handleLogin}
         >
             {#if isLoading}
                 Signing in...
