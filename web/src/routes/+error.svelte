@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-    <title>TL;DR | {page.status}</title>
+    <title>Tilder | {page.status}</title>
 </svelte:head>
 
 <div class="flex flex-col justify-center items-center min-h-screen">

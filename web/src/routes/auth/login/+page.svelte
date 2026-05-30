@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-    <title>TL;DR | Login</title>
+    <title>Tilder | Login</title>
 </svelte:head>
 
 <Card class="w-full max-w-sm">

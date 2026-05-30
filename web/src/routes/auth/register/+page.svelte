@@ -22,14 +22,16 @@
 </script>
 
 <svelte:head>
-    <title>TL;DR | Register</title>
+    <title>Tilder | Register</title>
 </svelte:head>
 
 <Card class="w-full max-w-sm">
     <!-- Header -->
     <CardHeader>
         <CardTitle class="text-2xl font-bold">Register</CardTitle>
-        <CardDescription>Create an account with your credentials</CardDescription>
+        <CardDescription
+            >Create an account with your credentials</CardDescription
+        >
         <CardAction>
             <Button
                 class="cursor-pointer"
@@ -92,7 +94,8 @@
                 <InputGroupAddon
                     class="cursor-pointer"
                     align="inline-end"
-                    onclick={() => (isConfirmPasswordVisible = !isConfirmPasswordVisible)}
+                    onclick={() =>
+                        (isConfirmPasswordVisible = !isConfirmPasswordVisible)}
                 >
                     {#if isConfirmPasswordVisible}
                         <EyeOff />
