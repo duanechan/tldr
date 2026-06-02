@@ -15,10 +15,12 @@ import (
 )
 
 func main() {
-	app, err := core.New()
+	dep, err := core.Bootstrap()
 	if err != nil {
-		log.Fatalf("Failed to initialize app: %s", err.Error())
+		log.Fatalf("Failed to build dependencies app: %s", err.Error())
 	}
+
+	app := core.New(dep)
 	defer app.CloseDB()
 
 	app.Use(

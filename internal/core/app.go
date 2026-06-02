@@ -18,14 +18,18 @@ import (
 type App struct {
 	mux       *http.ServeMux
 	Handler   http.Handler
-	db        *sql.DB
-	Queries   *database.Queries
-	Config    *config.Config
-	AI        AIModel
-	Logger    *slog.Logger
 	startedAt time.Time
 	mu        *sync.RWMutex
 	clients   map[string]*rate.Limiter
+	*Dependencies
+}
+
+type Dependencies struct {
+	Config  *config.Config
+	DB      *sql.DB
+	Queries *database.Queries
+	AI      AIModel
+	Logger  *slog.Logger
 }
 
 const Prompt = `
@@ -76,7 +80,7 @@ var ContentConfig = &genai.GenerateContentConfig{
 	},
 }
 
-func New() (*App, error) {
+func Bootstrap() (*Dependencies, error) {
 	cfg, err := config.New()
 	if err != nil {
 		return nil, err
@@ -100,20 +104,28 @@ func New() (*App, error) {
 	logger := slog.New(
 		tint.NewHandler(os.Stderr, &tint.Options{Level: logLevel}),
 	)
+
+	return &Dependencies{
+		Config:  cfg,
+		DB:      db,
+		Queries: database.New(db),
+		AI:      aiClient,
+		Logger:  logger,
+	}, nil
+}
+
+func New(d *Dependencies) *App {
+
 	mux := http.NewServeMux()
 
 	return &App{
-		mux:       mux,
-		Handler:   mux,
-		db:        db,
-		Queries:   database.New(db),
-		Config:    cfg,
-		AI:        aiClient,
-		Logger:    logger,
-		startedAt: time.Now(),
-		mu:        &sync.RWMutex{},
-		clients:   make(map[string]*rate.Limiter),
-	}, nil
+		mux:          mux,
+		Handler:      mux,
+		Dependencies: d,
+		startedAt:    time.Now(),
+		mu:           &sync.RWMutex{},
+		clients:      make(map[string]*rate.Limiter),
+	}
 }
 
 func (a *App) Handle(pattern string, handler http.Handler) {
@@ -132,5 +144,5 @@ func (a *App) Use(middleware ...func(http.Handler) http.Handler) {
 
 func (a *App) CloseDB() {
 	a.Logger.Info("Database connection closed")
-	a.db.Close()
+	a.DB.Close()
 }
