@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"database/sql"
 	"log/slog"
 	"net/http"
@@ -17,17 +16,16 @@ import (
 )
 
 type App struct {
-	mux           *http.ServeMux
-	Handler       http.Handler
-	db            *sql.DB
-	Queries       *database.Queries
-	Config        *config.Config
-	Models        *genai.Models
-	ContentConfig *genai.GenerateContentConfig
-	Logger        *slog.Logger
-	startedAt     time.Time
-	mu            *sync.RWMutex
-	clients       map[string]*rate.Limiter
+	mux       *http.ServeMux
+	Handler   http.Handler
+	db        *sql.DB
+	Queries   *database.Queries
+	Config    *config.Config
+	AI        AIModel
+	Logger    *slog.Logger
+	startedAt time.Time
+	mu        *sync.RWMutex
+	clients   map[string]*rate.Limiter
 }
 
 const Prompt = `
@@ -89,9 +87,7 @@ func New() (*App, error) {
 		return nil, err
 	}
 
-	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
-		APIKey: cfg.APIKey,
-	})
+	aiClient, err := NewAIClient(cfg.APIKey)
 	if err != nil {
 		return nil, err
 	}
@@ -107,17 +103,16 @@ func New() (*App, error) {
 	mux := http.NewServeMux()
 
 	return &App{
-		mux:           mux,
-		Handler:       mux,
-		db:            db,
-		Queries:       database.New(db),
-		Config:        cfg,
-		Models:        client.Models,
-		ContentConfig: ContentConfig,
-		Logger:        logger,
-		startedAt:     time.Now(),
-		mu:            &sync.RWMutex{},
-		clients:       make(map[string]*rate.Limiter),
+		mux:       mux,
+		Handler:   mux,
+		db:        db,
+		Queries:   database.New(db),
+		Config:    cfg,
+		AI:        aiClient,
+		Logger:    logger,
+		startedAt: time.Now(),
+		mu:        &sync.RWMutex{},
+		clients:   make(map[string]*rate.Limiter),
 	}, nil
 }
 

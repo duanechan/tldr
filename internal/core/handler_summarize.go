@@ -101,11 +101,11 @@ func (a *App) SummarizeFile(w http.ResponseWriter, r *http.Request) {
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
-	result, err := a.Models.GenerateContent(
+	result, err := a.AI.GenerateContent(
 		r.Context(),
 		a.Config.APIModel,
 		contents,
-		a.ContentConfig,
+		ContentConfig,
 	)
 	if err, exists := errors.AsType[genai.APIError](err); exists {
 		switch err.Code {
@@ -207,11 +207,11 @@ func (a *App) SummarizeText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := a.Models.GenerateContent(
+	result, err := a.AI.GenerateContent(
 		r.Context(),
 		a.Config.APIModel,
 		genai.Text(text),
-		a.ContentConfig,
+		ContentConfig,
 	)
 	if err, exists := errors.AsType[genai.APIError](err); exists {
 		switch err.Code {
