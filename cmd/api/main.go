@@ -21,7 +21,7 @@ func main() {
 	}
 
 	app := core.New(dep)
-	defer app.CloseDB()
+	defer app.DB.Close()
 
 	app.Use(
 		app.PanicRecoveryMiddleware,

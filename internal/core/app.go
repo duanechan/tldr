@@ -141,8 +141,3 @@ func (a *App) Use(middleware ...func(http.Handler) http.Handler) {
 		a.Handler = m(a.Handler)
 	}
 }
-
-func (a *App) CloseDB() {
-	a.Logger.Info("Database connection closed")
-	a.DB.Close()
-}
