@@ -17,27 +17,27 @@ import (
 )
 
 type App struct {
-	mux       *http.ServeMux
-	Handler   http.Handler
-	db        *sql.DB
-	Queries   *database.Queries
-	Config    *config.Config
-	Client    *genai.Client
-	Model     *genai.GenerateContentConfig
-	Logger    *slog.Logger
-	startedAt time.Time
-	mu        *sync.RWMutex
-	clients   map[string]*rate.Limiter
+	mux           *http.ServeMux
+	Handler       http.Handler
+	db            *sql.DB
+	Queries       *database.Queries
+	Config        *config.Config
+	Models        *genai.Models
+	ContentConfig *genai.GenerateContentConfig
+	Logger        *slog.Logger
+	startedAt     time.Time
+	mu            *sync.RWMutex
+	clients       map[string]*rate.Limiter
 }
 
-const prompt = `
+const Prompt = `
 	You are a document summarizer.
-	
+
 	Summarize the documents, text files, raw text, or images that are provided
 	to you.
-	
+
 	Extract its keypoints and ensure the user understands what the contents are.
-	
+
 	Keep the content brief and simple (10% of original content with a maximum
 	of 200 words).
 
@@ -48,14 +48,14 @@ const prompt = `
 
 	Contents are labelled 'dangerous' if it contains sensitive information
 	(medical records, PII, financial data, credentials, legal docs, etc.)
-	
+
 	Don't make the title too verbose.
-	
+
 	Do not ask for more input.
 	`
 
-var Model = &genai.GenerateContentConfig{
-	SystemInstruction: genai.NewContentFromText(prompt, genai.RoleModel),
+var ContentConfig = &genai.GenerateContentConfig{
+	SystemInstruction: genai.NewContentFromText(Prompt, genai.RoleModel),
 	ResponseMIMEType:  "application/json",
 	ResponseJsonSchema: map[string]any{
 		"type":     "object",
@@ -107,17 +107,17 @@ func New() (*App, error) {
 	mux := http.NewServeMux()
 
 	return &App{
-		mux:       mux,
-		Handler:   mux,
-		db:        db,
-		Queries:   database.New(db),
-		Config:    cfg,
-		Client:    client,
-		Model:     Model,
-		Logger:    logger,
-		startedAt: time.Now(),
-		mu:        &sync.RWMutex{},
-		clients:   make(map[string]*rate.Limiter),
+		mux:           mux,
+		Handler:       mux,
+		db:            db,
+		Queries:       database.New(db),
+		Config:        cfg,
+		Models:        client.Models,
+		ContentConfig: ContentConfig,
+		Logger:        logger,
+		startedAt:     time.Now(),
+		mu:            &sync.RWMutex{},
+		clients:       make(map[string]*rate.Limiter),
 	}, nil
 }
 

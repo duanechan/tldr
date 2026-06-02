@@ -24,7 +24,7 @@ func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 	}
 
 	modelConnected := "UP"
-	if _, err := a.Client.Models.List(r.Context(), nil); err != nil {
+	if _, err := a.Models.List(r.Context(), nil); err != nil {
 		modelConnected = "DOWN"
 	}
 
