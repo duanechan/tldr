@@ -28,8 +28,14 @@ func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 		modelConnected = "DOWN"
 	}
 
+	status := "OK"
+	isHealthy := dbConnected == "UP" && modelConnected == "UP"
+	if !isHealthy {
+		status = "UNHEALTHY"
+	}
+
 	a.jsonResponse(w, http.StatusOK, healthResponse{
-		Status: "OK",
+		Status: status,
 		Uptime: time.Since(a.startedAt).Round(time.Second).String(),
 		Services: services{
 			Database: dbConnected,

@@ -4,13 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
-	"net/http"
-	"sync"
 	"time"
 
 	"github.com/duanechan/tldr/internal/config"
 	"github.com/duanechan/tldr/internal/database"
-	"golang.org/x/time/rate"
 	"google.golang.org/genai"
 )
 
@@ -69,16 +66,5 @@ func newTestDependencies(ai AIModel) *Dependencies {
 		Queries: database.New(db),
 		AI:      ai,
 		Logger:  slog.Default(),
-	}
-}
-
-func newMockApp() *App {
-	return &App{
-		mux:          http.NewServeMux(),
-		Handler:      http.NewServeMux(),
-		startedAt:    time.Now(),
-		mu:           &sync.RWMutex{},
-		clients:      make(map[string]*rate.Limiter),
-		Dependencies: newTestDependencies(&mockAI{}),
 	}
 }
